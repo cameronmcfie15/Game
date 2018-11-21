@@ -1,4 +1,11 @@
 # Made By Cameron McFie
+"""
+TO DO:
+Use Rects of polygon collisions
+Use Surface mask for other (complicated shapes)
+Rotate using surface for sprites
+Rotate polygon using circle method
+"""
 
 import pygame, sys, random, math, time, threading, trace,sched
 import numpy as np
@@ -40,13 +47,14 @@ class Player(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.xPos, self.yPos, self.xVel, self.yVel, self.xAcceleration, self.yAcceleration = 500, 500, 0, 0, 0, 0
         #self.sprite = pygame.draw.circle(screen, colourDict['brown'], (int(self.xPos), int(self.yPos)), 15)
-        #self.player = pygame.Suface
+        self.surface = pygame.Surface((100, 100), pygame.SRCALPHA)
         self.force = 0
         self.decay = 0.98
         self.angle = 0
 
     def update(self):
         #self.sprite = pygame.draw.circle(screen, colourDict['black'], (int(self.xPos), int(self.yPos)), 15)
+        self.surface.fill((10,10,10))
         if self.force > 0:
             self.ship = pygame.image.load('missile1.png')
         else:
@@ -56,9 +64,9 @@ class Player(pygame.sprite.Sprite):
 
         self.triList = [(self.x[0] + self.xPos, self.y[0] + self.yPos), (self.x[1] + self.xPos, self.y[1] + self.yPos), (self.x[2] + self.xPos, self.y[2] + self.yPos)]
         # self.triList = [(0 + self.x, -10 + self.y), (10 + self.x, 10 + self.y), (-10 + self.x, 10 + self.y)]
-        self.tri = pygame.draw.polygon(screen, colourDict['white'], self.triList, 2)
+        self.tri = pygame.draw.polygon(self.surface, colourDict['white'], self.triList, 2)
         #self.tri = pygame.transform.rotate(self.tri, math.degrees(self.angle-math.pi))
-        self.tri = pygame.draw.polygon(screen, colourDict['white'], self.triList,2)
+        #self.tri = pygame.draw.polygon(screen, colourDict['white'], self.triList,2)
         self.ship = pygame.transform.rotate(self.ship, math.degrees(self.angle-math.pi))
         self.posistionUpdate()
         screen.blit(self.ship, (self.xPos, self.yPos))
@@ -410,7 +418,7 @@ def other():
 
 
 if __name__ == '__main__':
-    profile.run('main()')
+    #profile.run('main()')
     main()
 
 '''
