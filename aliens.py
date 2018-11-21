@@ -1,0 +1,1 @@
+C:\Users\User\AppData\Local\Programs\Python\Python36-32\Lib\site-packages\pygame\examples\macosx\aliens_app_example\aliens.py

@@ -2,7 +2,7 @@
 
 import pygame, sys, random, math, time, threading, trace,sched
 import numpy as np
-import itertools
+import itertools, profile
 # Setup
 #  For trace    python -m trace --trace Orbit_Sim.py
 pygame.init()
@@ -37,8 +37,10 @@ G = 6.67*10**-11  # Gravity Constant    6.67*10**-11
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
         self.xPos, self.yPos, self.xVel, self.yVel, self.xAcceleration, self.yAcceleration = 500, 500, 0, 0, 0, 0
-        self.sprite = pygame.draw.circle(screen, colourDict['brown'], (int(self.xPos), int(self.yPos)), 15)
+        #self.sprite = pygame.draw.circle(screen, colourDict['brown'], (int(self.xPos), int(self.yPos)), 15)
+        #self.player = pygame.Suface
         self.force = 0
         self.decay = 0.98
         self.angle = 0
@@ -54,6 +56,8 @@ class Player(pygame.sprite.Sprite):
 
         self.triList = [(self.x[0] + self.xPos, self.y[0] + self.yPos), (self.x[1] + self.xPos, self.y[1] + self.yPos), (self.x[2] + self.xPos, self.y[2] + self.yPos)]
         # self.triList = [(0 + self.x, -10 + self.y), (10 + self.x, 10 + self.y), (-10 + self.x, 10 + self.y)]
+        self.tri = pygame.draw.polygon(screen, colourDict['white'], self.triList, 2)
+        #self.tri = pygame.transform.rotate(self.tri, math.degrees(self.angle-math.pi))
         self.tri = pygame.draw.polygon(screen, colourDict['white'], self.triList,2)
         self.ship = pygame.transform.rotate(self.ship, math.degrees(self.angle-math.pi))
         self.posistionUpdate()
@@ -406,6 +410,7 @@ def other():
 
 
 if __name__ == '__main__':
+    profile.run('main()')
     main()
 
 '''
