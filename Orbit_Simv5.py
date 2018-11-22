@@ -3,7 +3,7 @@
 TO DO:
 Use Rects of polygon collisions
 Use Surface mask for other (complicated shapes)
-Rotate using surface for sprites
+Rotate using surface for sprites 
 Rotate polygon using circle method
 """
 
@@ -47,48 +47,26 @@ class Player(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.xPos, self.yPos, self.xVel, self.yVel, self.xAcceleration, self.yAcceleration = 500, 500, 0, 0, 0, 0
         #self.sprite = pygame.draw.circle(screen, colourDict['brown'], (int(self.xPos), int(self.yPos)), 15)
-        self.surface = pygame.Surface((100, 100), pygame.SRCALPHA)
         self.force = 0
         self.decay = 0.98
         self.angle = 0
 
     def update(self):
-        #self.sprite = pygame.draw.circle(screen, colourDict['black'], (int(self.xPos), int(self.yPos)), 15)
-        self.surface.fill((10,10,10))
         if self.force > 0:
             self.ship = pygame.image.load('missile1.png')
         else:
             self.ship = pygame.image.load('missile3.png')
-        # self.triList = [(0+center,-10+center),(10+center,10+center),(-10+center,10+center)]
         self.x, self.y = [0, 10, -10], [-10, 10, 10]
 
         self.triList = [(self.x[0] + self.xPos, self.y[0] + self.yPos), (self.x[1] + self.xPos, self.y[1] + self.yPos), (self.x[2] + self.xPos, self.y[2] + self.yPos)]
-        # self.triList = [(0 + self.x, -10 + self.y), (10 + self.x, 10 + self.y), (-10 + self.x, 10 + self.y)]
-        self.tri = pygame.draw.polygon(self.surface, colourDict['white'], self.triList, 2)
         #self.tri = pygame.transform.rotate(self.tri, math.degrees(self.angle-math.pi))
-        #self.tri = pygame.draw.polygon(screen, colourDict['white'], self.triList,2)
+        self.tri = pygame.draw.polygon(screen, colourDict['white'], self.triList,2)
         self.ship = pygame.transform.rotate(self.ship, math.degrees(self.angle-math.pi))
         self.posistionUpdate()
         screen.blit(self.ship, (self.xPos, self.yPos))
-        #print(self.xPos, self.yPos, self.xVel, self.yVel, self.xAcceleration, self.yAcceleration)
         self.force = 0
-        # self.force
-        # self.xAcceleration = self.force * self.xPos
-        # self.yAcceleration = self.force * self.yPos
-        # self.yAcceleration = self.force * self.yPos
-        # self.yAcceleration = self.force * self.yPos
-        # self.yAcceleration = self.force * self.yPos
-        # if keyPressed(pygame.K_UP):
-        #     self.force = 0.3
-        # else:
-        #     self.force = 0
 
     def moveUp(self):
-        # if pygame.key.get_focused():
-        # # self.yAcceleration += -self.force
-        #     self.force = 1
-        # else:
-        #     self.force = 0
         pass
 
 
@@ -226,20 +204,7 @@ class Missile:
         self.xPos += self.xVel * timeSec  # Time sec works well for 1 target but needs to reset for multiply tartgets
         self.yPos += self.yVel * timeSec
         self.rotater()
-        '''
-        self.opposite = (planetList[0].yPos - self.yPos)  # Works out distance between the y axis
-        self.adjacent = (planetList[0].xPos - self.xPos)  # Works out distance between the x axis
-        self.distance = abs(math.sqrt(((self.xPos - earth.xPos) ** 2) + ((self.yPos - earth.yPos) ** 2)))
-        self.force = (G * Mass * 1) / self.distance ** 2  # V = GM/r
-        self.xAcceleration = self.force * (earth.xPos - self.xPos) / self.distance
-        self.yAcceleration = self.force * (earth.yPos - self.yPos) / self.distance
-        self.xVel += self.xAcceleration
-        self.yVel += self.yAcceleration
-        self.xPos += self.xVel
-        self.yPos += self.yVel
-        print(self.xPos, self.yPos)
-        #self.missile = screen.blit(self.rocket, (self.xPos, self.yPos))
-        self.rotater()'''
+
 
     def rotater(self):
         self.direction = math.atan2(self.opposite, self.adjacent) * -1
@@ -252,8 +217,6 @@ class shot:
 
     def update(self):
         self.shot = pygame.draw.circle(screen, colourDict['black'], (int(self.xPos), int(self.yPos)), 2)
-
-
 
 
 
