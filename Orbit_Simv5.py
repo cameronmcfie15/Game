@@ -4,7 +4,6 @@ TO DO:
 Use Rects of polygon collisions
 Use Surface mask for other (complicated shapes)
 Rotate using surface for sprites 
-Rotate polygon using circle method
 """
 
 import pygame, sys, random, math, time, threading, trace,sched
@@ -13,10 +12,10 @@ import itertools, profile
 # Setup
 #  For trace    python -m trace --trace Orbit_Sim.py
 pygame.init()
-fps = 60
+fps = 100
 fpsClock = pygame.time.Clock()
 start_ticks = pygame.time.get_ticks()
-width, height = 1000, 950
+width, height = 1200, 900
 screen = pygame.display.set_mode((width, height))
 font = pygame.font.SysFont('Verdana', 18)
 planetList, satList, missileList = [], [], []
@@ -50,30 +49,44 @@ class Player(pygame.sprite.Sprite):
         self.force = 0
         self.decay = 0.98
         self.angle = 0
+        self.radius = 20
+        self.triangle = []
 
     def update(self):
         if self.force > 0:
             self.ship = pygame.image.load('missile1.png')
         else:
             self.ship = pygame.image.load('missile3.png')
-        self.x, self.y = [0, 10, -10], [-10, 10, 10]
 
-        self.triList = [(self.x[0] + self.xPos, self.y[0] + self.yPos), (self.x[1] + self.xPos, self.y[1] + self.yPos), (self.x[2] + self.xPos, self.y[2] + self.yPos)]
+        self.x, self.y = [], []
+
+
+        self.triangle = [0, (3 * math.pi / 4), (5 * math.pi / 4)]
+        self.triangle = map(lambda x: x+(2*math.pi/4), self.triangle)
+        for t in self.triangle:
+            # apply the circle formula
+            self.x.append(self.xPos + self.radius * math.cos(t + -self.angle))
+            self.y.append(self.yPos + self.radius * math.sin(t + -self.angle))
+
+        self.triList = [(self.x[0], self.y[0]), (self.x[1], self.y[1]), (self.x[2], self.y[2])]
         #self.tri = pygame.transform.rotate(self.tri, math.degrees(self.angle-math.pi))
         self.tri = pygame.draw.polygon(screen, colourDict['white'], self.triList,2)
         self.ship = pygame.transform.rotate(self.ship, math.degrees(self.angle-math.pi))
+
+
         self.posistionUpdate()
-        screen.blit(self.ship, (self.xPos, self.yPos))
+        #screen.blit(self.ship, (self.xPos, self.yPos))
         self.force = 0
+
 
     def moveUp(self):
         pass
 
 
-
     def moveDown(self):
         # self.yAcceleration += +self.force
         self.force = 0
+
 
     def posistionUpdate(self):
         self.angle = list(pygame.mouse.get_pos())
@@ -89,8 +102,6 @@ class Player(pygame.sprite.Sprite):
         self.yVel *= self.decay
         self.xPos += self.xVel
         self.yPos += self.yVel
-        # if d < 1:
-        #     pass
 
 
 class Planet:
@@ -211,13 +222,17 @@ class Missile:
         self.rotated = pygame.transform.rotate(self.rocket, math.degrees(self.direction)-90)
         self.missile = screen.blit(self.rotated, (self.xPos, self.yPos))
 
-class shot:
-    def __init__(self, angle, xPos, yPos):
-        self.angle, self.xPos, self.yPos = angle, xPos, yPos
-
+class Shot:
+    def __init__(self):
+        global isTrue
+        self.angle, self.xPos, self.yPos = player.angle, player.xPos, player.yPos
+        isTrue = 1
+        self.xVel = math.sin(self.angle) * 10
+        self.yVel = math.cos(self.angle) * 10
     def update(self):
-        self.shot = pygame.draw.circle(screen, colourDict['black'], (int(self.xPos), int(self.yPos)), 2)
-
+        self.xPos += self.xVel
+        self.yPos += self.yVel
+        self.shot = pygame.draw.circle(screen, colourDict['white'], (int(self.xPos), int(self.yPos)), 5)
 
 
 def keyboard():
@@ -281,12 +296,18 @@ def updater():  # print(len(planetList))
         missile.update()
     player.update()
     hud()
+    if isTrue == 1:
+        shot1.update()
+
 
 
 def eventHandler():
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            global shot1
+            shot1 = Shot()
 
 
 def randPlanets():
@@ -316,7 +337,7 @@ player = Player()
 startFrames = 0
 startTime = 0
 s = sched.scheduler(time.time, time.sleep)
-
+isTrue = 0
 randPlanets()
 #threading.Thread(target=fpsCounter).start()
 #fpsCounter()
@@ -330,23 +351,13 @@ def main():
     global center
     degrees = 0
     frames = 0
-
+    clock = pygame.time.Clock()
     centerList=[400,700]
     x=1
+    text = ""
+    sTime = time.time()
     global timeSec
     while True:  # main game loop
-        #screen.fill(colourDict['black'])
-
-        #d = abs(math.sqrt(((earth.xPos - centerList[x]) ** 2) + ((earth.yPos - centerList[x]) ** 2)))
-        # if d < 100:
-        #     if x == 1:
-        #         center = 700
-        #         x=0
-        #         print('here')
-        #     # if x== 0:
-        #     #     center = 400
-        #     #     x=1
-        #d = abs(math.sqrt(((earth.xPos - centerList[x]) ** 2) + ((earth.yPos - centerList[x]) ** 2)))
         screen.blit(bg,(0,0))
         randColour = list(np.random.choice(range(256), size=3))
         timeSec = (pygame.time.get_ticks() - start_ticks) / 1000  # Time in Seconds
@@ -361,17 +372,28 @@ def main():
         else:
             degrees = 0
         #sun = screen.blit(rotated, (500 - rect.center[0], 500 - rect.center[1]))
-        sun = screen.blit(rotated, (400, 400))
-        sun = screen.blit(rotated, (700, 700))
+        screen.blit(rotated, (400, 400))
+        screen.blit(rotated, (700, 700))
         #sol = pygame.image.load('sol.png')
         updater()
         eventHandler()
         pygame.display.update()
         fpsClock.tick(fps)  # Same as time.sleep(1/fps) I think
-        frames += 1
         pressed = pygame.key.get_pressed()
         if 1 in pressed:
             keyboard()
+
+        eTime = time.time()
+
+        if eTime-sTime > 1:
+            print(text)
+            sTime = time.time()
+            text = str(frames)
+            frames = 0
+
+
+        screen.blit(font.render(text, True, (colourDict['white'])), (32, 48))
+        frames += 1
 
 
 def other():
