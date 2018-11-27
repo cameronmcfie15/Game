@@ -302,12 +302,8 @@ player = Player()
 #kerbin = Planet(1, 350, 500, 0, 4.21742417439)
 # moon = Sat(20, earth, 0, 0, 0, 0)
 # thaad = Missile(500, 500, 0)
-
-startFrames = 0
-startTime = 0
 #s = sched.scheduler(time.time, time.sleep)
 isTrue = 0
-randPlanets()
 
 def change():
     myfunc = next(itertools.cycle([0, 1]))
@@ -318,9 +314,6 @@ def main():
     global center
     degrees = 0
     frames = 0
-    clock = pygame.time.Clock()
-    centerList=[400,700]
-    x=1
     text = ""
     sTime = time.time()
     global timeSec
@@ -328,20 +321,14 @@ def main():
         screen.blit(bg,(0,0))
         randColour = list(np.random.choice(range(256), size=3))
         timeSec = (pygame.time.get_ticks() - start_ticks) / 1000  # Time in Seconds
-        rocketSpeed = (pygame.time.get_ticks() - start_ticks) / 1000
-        #sol = pygame.draw.circle(screen, colourDict['brown'], (500, 500), 80)
         scaled = pygame.transform.scale(sol, (20, 20))
         rotated = pygame.transform.rotate(scaled, degrees)
-        rect = rotated.get_rect()
-        #sun = screen.blit(rotated, (500 - rect.center[0], 500 - rect.center[1]))
         if degrees < 359:
             degrees += (1/4)
         else:
             degrees = 0
-        #sun = screen.blit(rotated, (500 - rect.center[0], 500 - rect.center[1]))
         screen.blit(rotated, (400, 400))
         screen.blit(rotated, (700, 700))
-        #sol = pygame.image.load('sol.png')
         updater()
         eventHandler()
         pygame.display.update()
@@ -357,17 +344,8 @@ def main():
             sTime = time.time()
             text = str(frames)
             frames = 0
-
-
         screen.blit(font.render(text, True, (colourDict['white'])), (32, 48))
         frames += 1
-
-
-def other():
-    while True:
-        time.sleep(1)
-        print('seconds')
-
 
 if __name__ == '__main__':
     #profile.run('main()')
