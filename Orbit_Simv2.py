@@ -16,7 +16,7 @@ colourDict = {'white': (255, 255, 255), 'brown': (160, 82, 45), 'black': (0, 0, 
 bg = pygame.image.load('background1.png')
 posMovement = 0.00001
 text = ' '
-numberOfPlanets = 1000
+numberOfPlanets = 10000
 frames, actualFps, count, degrees = 0, 0, 0, 0
 sol = pygame.image.load('sol.png')
 # Constants
@@ -50,7 +50,7 @@ class Planet:
         global count
         count += 1
         planetList.remove(self)
-        print('died', count)
+        #print('died', count)
 
     def collided(self):
         self.kill()
@@ -119,7 +119,7 @@ class Missile:
         count += 1
         #missileList.remove(self)
         planetList.pop(0)
-        print('died', count)
+        #print('died', count)
         rocketSpeed = 0
 
     def positionUpdate(self):
@@ -254,6 +254,8 @@ randPlanets()
 def main():
     degrees = 0
     frames = 0
+    sTime = time.time()
+    text = ""
     global timeSec
     while True:  # main game loop
         #screen.fill(colourDict['black'])
@@ -280,6 +282,13 @@ def main():
         pressed = pygame.key.get_pressed()
         if 1 in pressed:
             keyboard()
+        eTime = time.time()
+
+        if eTime-sTime > 1:
+            print(text)
+            sTime = time.time()
+            text = str(frames)
+            frames = 0
 
 
 def other():

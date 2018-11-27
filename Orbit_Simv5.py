@@ -32,61 +32,33 @@ sol = pygame.image.load('sol.png')
 Mass = 4*10**13  # Mass of Centre   5.972*10**24
 G = 6.67*10**-11  # Gravity Constant    6.67*10**-11
 
-
-# def keyPressed(inputKey):
-#     keysPressed = pygame.key.get_pressed()
-#     if keysPressed[inputKey]:
-#         return True
-#     else:
-#         return False
-#         print('wow')
-
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
         self.xPos, self.yPos, self.xVel, self.yVel, self.xAcceleration, self.yAcceleration = 500, 500, 0, 0, 0, 0
-        #self.sprite = pygame.draw.circle(screen, colourDict['brown'], (int(self.xPos), int(self.yPos)), 15)
         self.force = 0
         self.decay = 0.98
         self.angle = 0
         self.radius = 20
-        self.triangle = []
+        self.triangle, self.x, self.y = [], [], []
 
     def update(self):
-        if self.force > 0:
-            self.ship = pygame.image.load('missile1.png')
-        else:
-            self.ship = pygame.image.load('missile3.png')
-
         self.x, self.y = [], []
-
-
-        self.triangle = [0, (3 * math.pi / 4), (5 * math.pi / 4)]
-        self.triangle = map(lambda x: x+(2*math.pi/4), self.triangle)
-        for t in self.triangle:
-            # apply the circle formula
+        self.triangle = [0, (3 * math.pi / 4), (5 * math.pi / 4)]  # Points around a circle describing a triangle
+        self.triangle = map(lambda x: x+(2*math.pi/4), self.triangle)  # Adding 90 degrees to angles
+        for t in self.triangle:  # Makes these angles to x, y pos
             self.x.append(self.xPos + self.radius * math.cos(t + -self.angle))
             self.y.append(self.yPos + self.radius * math.sin(t + -self.angle))
-
-        self.triList = [(self.x[0], self.y[0]), (self.x[1], self.y[1]), (self.x[2], self.y[2])]
-        #self.tri = pygame.transform.rotate(self.tri, math.degrees(self.angle-math.pi))
-        self.tri = pygame.draw.polygon(screen, colourDict['white'], self.triList,2)
-        self.ship = pygame.transform.rotate(self.ship, math.degrees(self.angle-math.pi))
-
-
+        self.triangle = [(self.x[0], self.y[0]), (self.x[1], self.y[1]), (self.x[2], self.y[2])]  # X, Y Pos List
+        self.triangle = pygame.draw.polygon(screen, colourDict['white'], self.triangle, 2)
         self.posistionUpdate()
-        #screen.blit(self.ship, (self.xPos, self.yPos))
         self.force = 0
-
 
     def moveUp(self):
         pass
 
-
     def moveDown(self):
-        # self.yAcceleration += +self.force
         self.force = 0
-
 
     def posistionUpdate(self):
         self.angle = list(pygame.mouse.get_pos())
@@ -94,8 +66,6 @@ class Player(pygame.sprite.Sprite):
         self.angle = (math.atan2(self.angle[0],self.angle[1]))
         self.xAcceleration = math.sin(self.angle) * self.force
         self.yAcceleration = math.cos(self.angle) * self.force
-        # self.xAcceleration = self.force
-        # self.yAcceleration = self.force
         self.xVel += self.xAcceleration
         self.yVel += self.yAcceleration
         self.xVel *= self.decay
@@ -222,6 +192,7 @@ class Missile:
         self.rotated = pygame.transform.rotate(self.rocket, math.degrees(self.direction)-90)
         self.missile = screen.blit(self.rotated, (self.xPos, self.yPos))
 
+
 class Shot:
     def __init__(self):
         global isTrue
@@ -295,10 +266,8 @@ def updater():  # print(len(planetList))
     for missile in missileList:
         missile.update()
     player.update()
-    hud()
     if isTrue == 1:
         shot1.update()
-
 
 
 def eventHandler():
@@ -336,11 +305,9 @@ player = Player()
 
 startFrames = 0
 startTime = 0
-s = sched.scheduler(time.time, time.sleep)
+#s = sched.scheduler(time.time, time.sleep)
 isTrue = 0
 randPlanets()
-#threading.Thread(target=fpsCounter).start()
-#fpsCounter()
 
 def change():
     myfunc = next(itertools.cycle([0, 1]))
@@ -405,21 +372,6 @@ def other():
 if __name__ == '__main__':
     #profile.run('main()')
     main()
-
-'''
-def fpsCounter():
-    global startTime
-    #print("yall")
-    timy = int(((pygame.time.get_ticks() - start_ticks) / 1000)/timeSec)
-    print(timy)
-    print(timeSec)
-    time.sleep(1)
-    if timeSec-timy > 1:
-        print('sec')
-        startTime = timeSec
-        startFrames = frames
-        #print(startTime)'''
-
 
 '''def scale():# Takes arguements that need changing
     change value by factor
