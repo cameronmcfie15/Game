@@ -12,7 +12,7 @@ import itertools, profile
 
 # Setup / Assigning Variable
 pygame.init()  # Inizialises all of pygame
-fps = 60  # Framerate
+fps = 60  # Framerate, controls physics
 fpsClock = pygame.time.Clock()  # Sets up the pygame clock
 start_ticks = pygame.time.get_ticks()
 width, height = 1200, 900  # Window dimensions
@@ -30,8 +30,8 @@ shotSpeed = 15
 planetList, satList, missileList, shotList = [], [], [], []
 text = ' '
 numberOfPlanets = 0
-fired = 0
-frames, actualFps, count, degrees= 0, 0, 0, 0
+fired = 0  # Turns to 1 if shots have been fired
+frames, actualFps, count, degrees = 0, 0, 0, 0
 # Constants
 Mass = 4*10**13  # Mass of Centre   5.972*10**24
 G = 6.67*10**-11  # Gravity Constant    6.67*10**-11
@@ -228,22 +228,20 @@ class Shot:
 
 def keyboard():
     global pressed
+    global shotSpeed
     pressed = pygame.key.get_pressed()
     if pressed[pygame.K_RIGHT]:
         player.moveRight()
         #planetList[0].xVel += posMovement
 
-    if pressed[pygame.K_LEFT]:
-        player.moveLeft()
-        #planetList[0].xVel -= posMovement
+    if pressed[pygame.K_3]:
+        shotSpeed = 20
 
-    if pressed[pygame.K_UP]:
-        shot()
-        player.moveUp()
-        #planetList[0].yVel -= posMovement
+    if pressed[pygame.K_2]:
+        shotSpeed = 15
 
-    if pressed[pygame.K_DOWN]:
-        player.moveDown()
+    if pressed[pygame.K_1]:
+        shotSpeed = 10
         #planetList[0].yVel += posMovement
 
     if pressed[pygame.K_SPACE]:
@@ -260,7 +258,7 @@ def keyboard():
 def hud():
     global text
     try:
-        text = 'hi'
+        text = str(shotSpeed)
         screen.blit(font.render(text, True, (colourDict['white'])), (32, 48))
     except Exception as e:
         print(e)
@@ -286,10 +284,6 @@ def eventHandler():
             sys.exit()
         if event.type == pygame.MOUSEBUTTONDOWN:
             Shot()
-        if event.type == pygame.K_1:
-            print('here')
-            global shotSpeed
-            shotSpeed = 10
 
 
 def randPlanets():
@@ -339,6 +333,7 @@ def main():
     startTime = time.time()
     while True:  # main game loop
         screen.blit(bg,(0,0))
+        hud()
         randColour = list(np.random.choice(range(256), size=3))
         timeSec = (pygame.time.get_ticks() - start_ticks) / 1000  # Time in Seconds
         scaled = pygame.transform.scale(sol, (20, 20))
@@ -368,6 +363,7 @@ def main():
         frames += 1
         totFrames += 1
 
+
 if __name__ == '__main__':
     #profile.run('main()')
     main()
@@ -381,11 +377,3 @@ if __name__ == '__main__':
 def scale(input):
     input-500
     return input()'''
-
-
-
-
-
-
-
-
