@@ -226,7 +226,6 @@ class Shot:
             shotList.remove(self)
 
 
-
 def keyboard():
     global pressed
     pressed = pygame.key.get_pressed()
