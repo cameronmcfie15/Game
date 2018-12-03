@@ -6,39 +6,53 @@ Use Surface mask for other (complicated shapes)
 Rotate using surface for sprites 
 """
 
-import pygame, sys, random, math, time, threading, trace,sched
+import pygame, sys, random, math, time, threading, trace
 import numpy as np
 import itertools, profile
-# Setup
-#  For trace    python -m trace --trace Orbit_Sim.py
-pygame.init()
-fps = 100
-fpsClock = pygame.time.Clock()
+
+# Setup / Assigning Variable
+pygame.init()  # Inizialises all of pygame
+fps = 60  # Framerate
+fpsClock = pygame.time.Clock()  # Sets up the pygame clock
 start_ticks = pygame.time.get_ticks()
-width, height = 1200, 900
-screen = pygame.display.set_mode((width, height))
-font = pygame.font.SysFont('Verdana', 18)
-planetList, satList, missileList = [], [], []
+width, height = 1200, 900  # Window dimensions
+screen = pygame.display.set_mode((width, height))  # Sets up the screen
+font = pygame.font.SysFont('Verdana', 18)  # Sets up the Font
 center = 500
 randColour = list(np.random.choice(range(256), size=3))
 colourDict = {'white': (255, 255, 255), 'brown': (160, 82, 45), 'black': (0, 0, 0)}
 bg = pygame.image.load('background1.png')
+sol = pygame.image.load('sol.png')
+pygame.Surface.convert(bg)
 posMovement = 0.00001
+shotSpeed = 15
+# Declaring variables
+planetList, satList, missileList, shotList = [], [], [], []
 text = ' '
 numberOfPlanets = 0
-frames, actualFps, count, degrees = 0, 0, 0, 0
-sol = pygame.image.load('sol.png')
+fired = 0
+frames, actualFps, count, degrees= 0, 0, 0, 0
 # Constants
 Mass = 4*10**13  # Mass of Centre   5.972*10**24
 G = 6.67*10**-11  # Gravity Constant    6.67*10**-11
 
+
+def timeTaken():  # Function that calculates framerate of the application
+    global totFrames
+    endTime = time.time()
+    file = open("times.txt","a")
+    timeTaken = float(endTime-startTime)
+    info = "This script took "+str(timeTaken)+" seconds"+" and had an average framerate of "+str(totFrames/timeTaken)
+    print(totFrames, (totFrames/timeTaken))
+    file.write(info+"\n")
+    file.close()
+
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.xPos, self.yPos, self.xVel, self.yVel, self.xAcceleration, self.yAcceleration = 500, 500, 0, 0, 0, 0
-        self.force = 0
+        self.xPos, self.yPos = 500, 500
+        self.xVel, self.yVel, self.xAcceleration, self.yAcceleration, self.force, self.angle = 0, 0, 0, 0, 0, 0
         self.decay = 0.98
-        self.angle = 0
         self.radius = 20
         self.triangle, self.x, self.y = [], [], []
 
@@ -47,12 +61,12 @@ class Player(pygame.sprite.Sprite):
         self.triangle = [0, (3 * math.pi / 4), (5 * math.pi / 4)]  # Points around a circle describing a triangle
         self.triangle = map(lambda x: x+(2*math.pi/4), self.triangle)  # Adding 90 degrees to angles
         for t in self.triangle:  # Makes these angles to x, y pos
-            self.x.append(self.xPos + self.radius * math.cos(t + -self.angle))
-            self.y.append(self.yPos + self.radius * math.sin(t + -self.angle))
+            self.x.append(self.xPos + self.radius * math.cos(t + -self.angle))  # Adds these coordinates to list
+            self.y.append(self.yPos + self.radius * math.sin(t + -self.angle))      # Adds these coordinates to list
         self.triangle = [(self.x[0], self.y[0]), (self.x[1], self.y[1]), (self.x[2], self.y[2])]  # X, Y Pos List
-        self.triangle = pygame.draw.polygon(screen, colourDict['white'], self.triangle, 2)
+        self.triangle = pygame.draw.polygon(screen, colourDict['white'], self.triangle, 2)  # Draws the ship
         self.posistionUpdate()
-        self.force = 0
+        self.force = 0  # Resets force when button is not pushed down
 
     def moveUp(self):
         pass
@@ -195,15 +209,22 @@ class Missile:
 
 class Shot:
     def __init__(self):
-        global isTrue
+        shotList.append(self)
+        global shotSpeed
+        global fired
         self.angle, self.xPos, self.yPos = player.angle, player.xPos, player.yPos
-        isTrue = 1
-        self.xVel = math.sin(self.angle) * 10
-        self.yVel = math.cos(self.angle) * 10
+        fired = 1
+        self.xVel = math.sin(self.angle) * shotSpeed
+        self.yVel = math.cos(self.angle) * shotSpeed
+        self.distance = 0
     def update(self):
         self.xPos += self.xVel
         self.yPos += self.yVel
         self.shot = pygame.draw.circle(screen, colourDict['white'], (int(self.xPos), int(self.yPos)), 5)
+        self.distance = abs(math.sqrt(((self.xPos - center) ** 2) + ((self.yPos - center) ** 2)))
+        if self.distance > 1000:
+            shotList.remove(self)
+
 
 
 def keyboard():
@@ -240,22 +261,10 @@ def keyboard():
 def hud():
     global text
     try:
-        planet = missileList[0]
-        aStr = str(round(planet.yPos))
-        bStr = str(round(planet.xPos))
-        cStr = str(round(timeSec))
-        dStr = str(round(planet.distance))
-        eStr = str(round(planet.force,2))
-        fStr = str(round(planet.xAcceleration,2))
-        gStr = str(round(planet.yAcceleration,2))
-        hStr = str(round(planet.xVel, 1))
-        iStr = str(round(planet.yVel*-1, 1))
-        #fpsStr = str(round(frames,2))
-        text = (bStr+' XPos  '+cStr+' secs   '+aStr+' YPos   '+eStr+' ms-2   '+dStr+' m   '+fStr+'m xVect  '+gStr+'m yVect  '+hStr+'ms xVel  '+iStr+'ms yVel  ')
+        text = 'hi'
         screen.blit(font.render(text, True, (colourDict['white'])), (32, 48))
-    except:
-        pass
-        #print('hud gone')
+    except Exception as e:
+        print(e)
 
 
 def updater():  # print(len(planetList))
@@ -266,17 +275,22 @@ def updater():  # print(len(planetList))
     for missile in missileList:
         missile.update()
     player.update()
-    if isTrue == 1:
-        shot1.update()
+    if fired == 1:
+        for shot in shotList:
+            shot.update()
 
 
 def eventHandler():
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            timeTaken()
             sys.exit()
         if event.type == pygame.MOUSEBUTTONDOWN:
-            global shot1
-            shot1 = Shot()
+            Shot()
+        if event.type == pygame.K_1:
+            print('here')
+            global shotSpeed
+            shotSpeed = 10
 
 
 def randPlanets():
@@ -302,21 +316,28 @@ player = Player()
 #kerbin = Planet(1, 350, 500, 0, 4.21742417439)
 # moon = Sat(20, earth, 0, 0, 0, 0)
 # thaad = Missile(500, 500, 0)
-#s = sched.scheduler(time.time, time.sleep)
-isTrue = 0
+fired = 0
 
 def change():
     myfunc = next(itertools.cycle([0, 1]))
     return myfunc
 
 
+def menu():
+    pass
+
+
 def main():
     global center
+    global totFrames
+    totFrames = 0
     degrees = 0
     frames = 0
     text = ""
     sTime = time.time()
     global timeSec
+    global startTime
+    startTime = time.time()
     while True:  # main game loop
         screen.blit(bg,(0,0))
         randColour = list(np.random.choice(range(256), size=3))
@@ -327,8 +348,8 @@ def main():
             degrees += (1/4)
         else:
             degrees = 0
-        screen.blit(rotated, (400, 400))
-        screen.blit(rotated, (700, 700))
+        # screen.blit(rotated, (400, 400))
+        # screen.blit(rotated, (700, 700))
         updater()
         eventHandler()
         pygame.display.update()
@@ -344,12 +365,15 @@ def main():
             sTime = time.time()
             text = str(frames)
             frames = 0
-        screen.blit(font.render(text, True, (colourDict['white'])), (32, 48))
+        #screen.blit(font.render(text, True, (colourDict['white'])), (32, 48))
         frames += 1
+        totFrames += 1
 
 if __name__ == '__main__':
     #profile.run('main()')
     main()
+
+
 
 '''def scale():# Takes arguements that need changing
     change value by factor
