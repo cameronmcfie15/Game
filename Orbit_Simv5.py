@@ -95,17 +95,19 @@ class Asteroids():
         else:
             self.xPos = random.choice([-500, width+500])
             self.yPos = random.randint(-500, height+500)
-        self.xVel = random.uniform(-5, 5)
-        self.yVel = random.uniform(-5, 5)
+        self.xVel = random.uniform(-2, 2)
+        self.yVel = random.uniform(-2, 2)
         self.xAcceleration, self.yAcceleration, self.angle = 0, 0, 0
         self.rotationSpeed = random.uniform(0,1)
         self.radius = random.randint(5,100)
         self.polyList, self.xy, self.poly = [], [], []
         self.x, self.y = 0, 0
         asteroidList.append(self)
-        for i in range(0,10):
+        vertices = random.randint(8,16)
+        for i in range(0, vertices):
             self.point = random.uniform(0, math.tau)
             self.polyList.append(self.point)
+        self.polyList.sort()
 
     def update(self):
         self.updatePoly()
@@ -131,7 +133,7 @@ class Asteroids():
 
     def boundCheck(self):
         if self.xPos < -1000 or self.xPos > (width+1000) or self.yPos < -1000 or self.yPos > (width+1000):
-            pass
+            asteroidList.remove(self)
 
 
 class Planet:
