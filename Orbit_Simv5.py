@@ -30,6 +30,7 @@ shotSpeed = 15
 planetList, satList, missileList, shotList, asteroidList = [], [], [], [], []
 text = ' '
 numberOfPlanets = 0
+numberOfAsteroids = 100
 fired = 0  # Turns to 1 if shots have been fired
 frames, actualFps, count, degrees = 0, 0, 0, 0
 # Constants
@@ -85,12 +86,19 @@ class Player(pygame.sprite.Sprite):
         self.xPos += self.xVel
         self.yPos += self.yVel
 
-
 class Asteroids():
-    def __init__(self, rotation, xPos, yPos):
-        self.xPos, self.yPos = xPos, yPos
-        self.xVel, self.yVel, self.xAcceleration, self.yAcceleration, self.angle = 0, 0, 0, 0, 0
-        self.rotationSpeed = rotation
+    def __init__(self):
+        axisStart = random.choice([0,1])
+        if axisStart == 1:
+            self.xPos = random.randint(-500, width+500)
+            self.yPos = random.choice([-500, height+500])
+        else:
+            self.xPos = random.choice([-500, width+500])
+            self.yPos = random.randint(-500, height+500)
+        self.xVel = random.uniform(-5, 5)
+        self.yVel = random.uniform(-5, 5)
+        self.xAcceleration, self.yAcceleration, self.angle = 0, 0, 0
+        self.rotationSpeed = random.uniform(0,1)
         print(self.rotationSpeed, self.xPos, self.yPos)
         self.radius = 20
         self.poly, self.x, self.y = [], [], []
@@ -113,20 +121,11 @@ class Asteroids():
         self.triangle = pygame.draw.polygon(screen, colourDict['white'], self.triangle, 2)  # Draws the ship
 
     def posistionUpdate(self):
-        self.angle = list(pygame.mouse.get_pos())
-        self.angle = [self.angle[0]-self.xPos,self.angle[1]-self.yPos]
-        self.angle = (math.atan2(self.angle[0],self.angle[1]))
-        self.xAcceleration = math.sin(self.angle) * self.force
-        self.yAcceleration = math.cos(self.angle) * self.force
-        self.xVel += self.xAcceleration
-        self.yVel += self.yAcceleration
-        self.xVel *= self.decay
-        self.yVel *= self.decay
         self.xPos += self.xVel
         self.yPos += self.yVel
 
     def boundCheck(self):
-        if self.xPos < -100 or self.xPos < (width+100) or self.yPos < -100 or self.yPos < (width+100):
+        if self.xPos < -1000 or self.xPos > (width+1000) or self.yPos < -1000 or self.yPos > (width+1000):
             print("outa bounds!! howdy ho")
 
 
@@ -306,6 +305,8 @@ def updater():  # print(len(planetList))
         sat.update()
     for missile in missileList:
         missile.update()
+    for asteroid in asteroidList:
+        asteroid.update()
     player.update()
     if fired == 1:
         for shot in shotList:
@@ -336,10 +337,10 @@ def randPlanets():
         #Missile(500, 500, count)
         print(count)
 
-numberOfAsteroids = 10
+
 def randAsteroids():
-    for i in range(0, 10):  # Rotation , xPos, yPos
-        Asteroids(random.uniform(0,1),random.randint(0, width), random.randint(0, height))
+    for i in range(0, numberOfAsteroids):  # Rotation , xPos, yPos
+        Asteroids()
 
 player = Player()
 randAsteroids()
