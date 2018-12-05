@@ -22,12 +22,12 @@ center = 500
 randColour = list(np.random.choice(range(256), size=3))
 colourDict = {'white': (255, 255, 255), 'brown': (160, 82, 45), 'black': (0, 0, 0)}
 bg = pygame.image.load('background1.png')
-sol = pygame.image.load('sol.png')
+#sol = pygame.image.load('sol.png')
 pygame.Surface.convert(bg)
 posMovement = 0.00001
 shotSpeed = 15
 # Declaring variables
-planetList, satList, missileList, shotList = [], [], [], []
+planetList, satList, missileList, shotList, asteroidList = [], [], [], [], []
 text = ' '
 numberOfPlanets = 0
 fired = 0  # Turns to 1 if shots have been fired
@@ -47,6 +47,7 @@ def timeTaken():  # Function that calculates framerate of the application
     file.write(info+"\n")
     file.close()
 
+
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -57,6 +58,11 @@ class Player(pygame.sprite.Sprite):
         self.triangle, self.x, self.y = [], [], []
 
     def update(self):
+        self.updatePoly()
+        self.posistionUpdate()
+        self.force = 0  # Resets force when button is not pushed down
+
+    def updatePoly(self):
         self.x, self.y = [], []
         self.triangle = [0, (3 * math.pi / 4), (5 * math.pi / 4)]  # Points around a circle describing a triangle
         self.triangle = map(lambda x: x+(2*math.pi/4), self.triangle)  # Adding 90 degrees to angles
@@ -65,14 +71,6 @@ class Player(pygame.sprite.Sprite):
             self.y.append(self.yPos + self.radius * math.sin(t + -self.angle))      # Adds these coordinates to list
         self.triangle = [(self.x[0], self.y[0]), (self.x[1], self.y[1]), (self.x[2], self.y[2])]  # X, Y Pos List
         self.triangle = pygame.draw.polygon(screen, colourDict['white'], self.triangle, 2)  # Draws the ship
-        self.posistionUpdate()
-        self.force = 0  # Resets force when button is not pushed down
-
-    def moveUp(self):
-        pass
-
-    def moveDown(self):
-        self.force = 0
 
     def posistionUpdate(self):
         self.angle = list(pygame.mouse.get_pos())
@@ -86,6 +84,50 @@ class Player(pygame.sprite.Sprite):
         self.yVel *= self.decay
         self.xPos += self.xVel
         self.yPos += self.yVel
+
+
+class Asteroids():
+    def __init__(self, rotation, xPos, yPos):
+        self.xPos, self.yPos = xPos, yPos
+        self.xVel, self.yVel, self.xAcceleration, self.yAcceleration, self.angle = 0, 0, 0, 0, 0
+        self.rotationSpeed = rotation
+        print(self.rotationSpeed, self.xPos, self.yPos)
+        self.radius = 20
+        self.poly, self.x, self.y = [], [], []
+        asteroidList.append(self)
+
+    def update(self):
+        self.updatePoly()
+        self.posistionUpdate()
+        self.boundCheck()
+        self.force = 0  # Resets force when button is not pushed down
+
+    def updatePoly(self):
+        self.x, self.y = [], []
+        self.triangle = [0, (3 * math.pi / 4), (5 * math.pi / 4)]  # Points around a circle describing a triangle
+        self.triangle = map(lambda x: x+(2*math.pi/4), self.triangle)  # Adding 90 degrees to angles
+        for t in self.triangle:  # Makes these angles to x, y pos
+            self.x.append(self.xPos + self.radius * math.cos(t + -self.angle))  # Adds these coordinates to list
+            self.y.append(self.yPos + self.radius * math.sin(t + -self.angle))      # Adds these coordinates to list
+        self.triangle = [(self.x[0], self.y[0]), (self.x[1], self.y[1]), (self.x[2], self.y[2])]  # X, Y Pos List
+        self.triangle = pygame.draw.polygon(screen, colourDict['white'], self.triangle, 2)  # Draws the ship
+
+    def posistionUpdate(self):
+        self.angle = list(pygame.mouse.get_pos())
+        self.angle = [self.angle[0]-self.xPos,self.angle[1]-self.yPos]
+        self.angle = (math.atan2(self.angle[0],self.angle[1]))
+        self.xAcceleration = math.sin(self.angle) * self.force
+        self.yAcceleration = math.cos(self.angle) * self.force
+        self.xVel += self.xAcceleration
+        self.yVel += self.yAcceleration
+        self.xVel *= self.decay
+        self.yVel *= self.decay
+        self.xPos += self.xVel
+        self.yPos += self.yVel
+
+    def boundCheck(self):
+        if self.xPos < -100 or self.xPos < (width+100) or self.yPos < -100 or self.yPos < (width+100):
+            print("outa bounds!! howdy ho")
 
 
 class Planet:
@@ -246,13 +288,6 @@ def keyboard():
 
     if pressed[pygame.K_SPACE]:
         player.force = 0.4
-        #planetList[0].yVel = planetList[0].yVel*1.01
-        #planetList[0].xVel = planetList[0].xVel*1.01
-
-    if pressed[pygame.K_LSHIFT]:
-        pass
-        #planetList[0].yVel = planetList[0].yVel*0.99
-        #planetList[0].xVel = planetList[0].xVel*0.99
 
 
 def hud():
@@ -301,15 +336,13 @@ def randPlanets():
         #Missile(500, 500, count)
         print(count)
 
+numberOfAsteroids = 10
+def randAsteroids():
+    for i in range(0, 10):  # Rotation , xPos, yPos
+        Asteroids(random.uniform(0,1),random.randint(0, width), random.randint(0, height))
 
-v = math.sqrt((G * Mass) / 400)
-# Mass, X Position, Y Position, X Velocity, Y Velocity
 player = Player()
-# earth = Planet(1, 100, 500, 0, v)
-#kerbin = Planet(1, 350, 500, 0, 4.21742417439)
-# moon = Sat(20, earth, 0, 0, 0, 0)
-# thaad = Missile(500, 500, 0)
-fired = 0
+randAsteroids()
 
 def change():
     myfunc = next(itertools.cycle([0, 1]))
@@ -336,8 +369,8 @@ def main():
         hud()
         randColour = list(np.random.choice(range(256), size=3))
         timeSec = (pygame.time.get_ticks() - start_ticks) / 1000  # Time in Seconds
-        scaled = pygame.transform.scale(sol, (20, 20))
-        rotated = pygame.transform.rotate(scaled, degrees)
+        #scaled = pygame.transform.scale(sol, (20, 20))
+        #rotated = pygame.transform.rotate(scaled, degrees)
         if degrees < 359:
             degrees += (1/4)
         else:
