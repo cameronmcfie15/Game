@@ -9,9 +9,10 @@ need to define radius attribute somehow
 import pygame, sys, random, math, time, threading, trace, itertools, profile
 import numpy as np
 
-### Setup ###
+# --Setup--
 # Declaring / Assigning Variable
 pygame.init()  # Inizialises all of pygame
+pygame.mixer.init()  # Inizialises sound in pygame
 fps = 60  # Framerate, controls physics
 fpsClock = pygame.time.Clock()  # Sets up the pygame clock
 start_ticks = pygame.time.get_ticks()
@@ -19,17 +20,17 @@ width, height = 1200, 900  # Window dimensions
 screen = pygame.display.set_mode((width, height))  # Sets up the screen
 font = pygame.font.SysFont('Verdana', 18)  # Sets up the Font
 center = height/2
-randColour = list(np.random.choice(range(256), size=3))
-colourDict = {'white': (255, 255, 255), 'brown': (160, 82, 45), 'black': (0, 0, 0)}
-bg = pygame.image.load('background1.png')
-pygame.Surface.convert(bg)
+randColour = list(np.random.choice(range(256), size=3))  # Returns a random colour
+colourDict = {'white': (255, 255, 255), 'brown': (160, 82, 45), 'black': (0, 0, 0)}  # Predefined dictionary of colours
+bg = pygame.image.load('background1.png')  # Loads in the background image
+pygame.Surface.convert(bg)  # Don't have to do this. but meant to
 posMovement = 0.00001
 shotSpeed = 5
 planetList, satList, missileList, shotList, asteroidList = [], [], [], [], []
-text = ' '
+text = ''
 numberOfPlanets = 0
 numberOfAsteroids = 10
-SIZE = 100,100
+SIZE = 100, 100
 fired = 0  # Turns to 1 if shots have been fired
 lives = 0
 frames, actualFps, count, degrees = 0, 0, 0, 0
@@ -37,8 +38,10 @@ frames, actualFps, count, degrees = 0, 0, 0, 0
 Mass = 4*10**13  # Mass of Centre   5.972*10**24
 G = 6.67*10**-11  # Gravity Constant    6.67*10**-11
 
-### All the functions ###
-def timeTaken():  # Function that calculates framerate of the application
+# --All the functions --
+
+
+def timeTaken():  # Function that calculates framerate of the application and wrights it to text file
     global totFrames
     endTime = time.time()
     file = open("times.txt","a")
@@ -48,8 +51,10 @@ def timeTaken():  # Function that calculates framerate of the application
     file.write(info+"\n")
     file.close()
 
-def distance(v1 ,v2):  # Vector 1 and 2
+
+def distance(v1, v2):  # Vectors 1 and 2
     return math.sqrt((v1[0]-v2[0])**2 + (v1[1]-v2[1])**2)
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -59,17 +64,18 @@ class Player(pygame.sprite.Sprite):
         self.decay = 0.98
         self.radius = 20
         self.triangle, self.x, self.y, self.velVector = [], [], [], []
-        self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
+        # self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
 
-    def update(self):
+    def update(self):  # Is called every tick
         self.updatePoly()
         self.posistionUpdate()
-        self.velVector = [math.atan2(self.xVel,self.yVel), math.sqrt(self.xVel**2+self.yVel**2)]  # Theta , plus absolute value
+        self.velVector = [math.atan2(self.xVel, self.yVel), math.sqrt(self.xVel**2+self.yVel**2)]  # Theta ,absolute
         self.force = 0  # Resets force when button is not pushed down
-        self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
+        # self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
+        # Above line and same for init  not needed at the moment but may be needed for other collisions
 
     def updatePoly(self):
-        self.x, self.y = [], []
+        self.x, self.y = [], []  # Resets list of points so the previous points are not drawn again
         self.triangle = [0, (3 * math.pi / 4), (5 * math.pi / 4)]  # Points around a circle describing a triangle
         self.triangle = map(lambda x: x+(2*math.pi/4), self.triangle)  # Adding 90 degrees to angles
         for t in self.triangle:  # Makes these angles to x, y pos
@@ -79,10 +85,10 @@ class Player(pygame.sprite.Sprite):
         self.triangle = pygame.draw.polygon(screen, colourDict['white'], self.triangle, 2)  # Draws the ship
 
     def posistionUpdate(self):
-        self.angle = list(pygame.mouse.get_pos())
+        self.angle = list(pygame.mouse.get_pos())  # Calculating angle in rads of mouse from the player
         self.angle = [self.angle[0]-self.xPos,self.angle[1]-self.yPos]
         self.angle = (math.atan2(self.angle[0],self.angle[1]))
-        self.xAcceleration = math.sin(self.angle) * self.force
+        self.xAcceleration = math.sin(self.angle) * self.force  # Calculating forces and directions to update posistions
         self.yAcceleration = math.cos(self.angle) * self.force
         self.xVel += self.xAcceleration
         self.yVel += self.yAcceleration
@@ -98,23 +104,22 @@ class Player(pygame.sprite.Sprite):
 class Asteroids(pygame.sprite.Sprite):
     def __init__(self, xVel, yVel ,mass, spin):
         pygame.sprite.Sprite.__init__(self)
-        asteroidList.append(self)
-        # Declaring Variables
+        asteroidList.append(self)  # Put into list so it can be easily destroyed and checked for stuff like collisions
         self.polyList, self.xy, self.poly, self.velVector, self.pos = [], [], [], [], []
         self.x, self.y, self.angle, self.force = 0, 0, 0, 0
         self.density = 100
         self.distance = 0
         self.radiiSum = 0
         # Making things random unless preassigned a value
-        if xVel == 0:
+        if xVel == 0:  # Making the velocities random
             self.xVel = random.uniform(-2, 2)
             self.yVel = random.uniform(-2, 2)
-        else:
+        else:  # Else already predefined
             self.xVel = xVel
             self.yVel = yVel
-        if -0.2 <= self.xVel <= 0.2 or -0.2 <= self.yVel <= 0.2:
+        if -0.2 <= self.xVel <= 0.2 or -0.2 <= self.yVel <= 0.2:  # Checking to see if it's to slow, if so, destroys it
             self.death()
-        if spin == 0:
+        if spin == 0:  # Same of spin
             self.rotationSpeed = random.uniform(-0.05, 0.05)
         else:
             self.rotationSpeed = spin
@@ -137,6 +142,7 @@ class Asteroids(pygame.sprite.Sprite):
         if self.mass > 2500:
             for i in range (0,2):
                 Asteroids(0, 0, self.mass/2, 0)
+                # new direction max 90 degrees maybe definitely random
         elif self.mass >= 5000:
             for i in range (0,3):
                 Asteroids(0, 0, self.mass/3, 0)
@@ -260,6 +266,7 @@ class Planet:
         self.xPos += self.xVel
         self.yPos += self.yVel
 
+
 class Sat:  # Dunno what calls this but it works
     def __init__(self, radius, planet, xPos, yPos, velocity, w):
         self.planet, self.radius, self.xPos, self.yPos, self.velocity, self.w = planet, radius, xPos, yPos, velocity, w
@@ -271,6 +278,7 @@ class Sat:  # Dunno what calls this but it works
         self.xPos = self.radius * math.cos(self.w * timeSec) + self.planet.xPos
         self.yPos = self.radius * math.cos((self.w * timeSec) - (math.pi / 2)) + self.planet.yPos
         self.sat = pygame.draw.circle(screen, randColour, (int(self.xPos), int(self.yPos)), 2)
+
 
 class Missile:
     def __init__(self, xPos, yPos, target):
@@ -295,7 +303,6 @@ class Missile:
             self.kill()
             pass
 
-
     def kill(self):
         self.xPos, self.yPos = 500, 500
         global count
@@ -319,7 +326,6 @@ class Missile:
         self.yPos += self.yVel * timeSec
         self.rotater()
 
-
     def rotater(self):
         self.direction = math.atan2(self.opposite, self.adjacent) * -1
         self.rotated = pygame.transform.rotate(self.rocket, math.degrees(self.direction)-90)
@@ -336,9 +342,11 @@ class Shot(pygame.sprite.Sprite):
         self.xVel = math.sin(self.angle) * shotSpeed
         self.yVel = math.cos(self.angle) * shotSpeed
         self.distance = 0
-        self.radius = 5
+        self.radius = 4
         self.pos = [self.xPos, self.yPos]
         self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
+        fireSound = pygame.mixer.Sound('fire.wav')
+        fireSound.play()
 
     def update(self):
         self.pos = [self.xPos, self.yPos]
@@ -463,12 +471,13 @@ def main():
         if 1 in pressed:
             keyboard()
         eTime = time.time()
-        if eTime-sTime > 1:
+        if eTime-sTime > 1:  # Is true when one seconds has passed
             print(text)
             sTime = time.time()
             text = str(frames)
             frames = 0
             randAsteroids()
+
         screen.blit(font.render(text, True, (colourDict['white'])), (32, 48))
         frames += 1
         totFrames += 1
