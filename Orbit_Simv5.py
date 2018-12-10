@@ -12,7 +12,7 @@ import numpy as np
 # --Setup--
 # Declaring / Assigning Variable
 pygame.init()  # Inizialises all of pygame
-pygame.mixer.init()  # Inizialises sound in pygame
+#pygame.mixer.init()  # Inizialises sound in pygame
 fps = 60  # Framerate, controls physics
 fpsClock = pygame.time.Clock()  # Sets up the pygame clock
 start_ticks = pygame.time.get_ticks()
@@ -22,14 +22,14 @@ font = pygame.font.SysFont('Verdana', 18)  # Sets up the Font
 center = height/2
 randColour = list(np.random.choice(range(256), size=3))  # Returns a random colour
 colourDict = {'white': (255, 255, 255), 'brown': (160, 82, 45), 'black': (0, 0, 0)}  # Predefined dictionary of colours
-bg = pygame.image.load('background1.png')  # Loads in the background image
+bg = pygame.image.load('Images/background1.png')  # Loads in the background image
 pygame.Surface.convert(bg)  # Don't have to do this. but meant to
 posMovement = 0.00001
 shotSpeed = 5
 planetList, satList, missileList, shotList, asteroidList = [], [], [], [], []
 text = ''
 numberOfPlanets = 0
-numberOfAsteroids = 10
+numberOfAsteroids = 5
 SIZE = 100, 100
 fired = 0  # Turns to 1 if shots have been fired
 lives = 0
@@ -55,6 +55,8 @@ def timeTaken():  # Function that calculates framerate of the application and wr
 def distance(v1, v2):  # Vectors 1 and 2
     return math.sqrt((v1[0]-v2[0])**2 + (v1[1]-v2[1])**2)
 
+def volume(sound):
+    return sound.set_volume(0.1)
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -73,6 +75,9 @@ class Player(pygame.sprite.Sprite):
         self.force = 0  # Resets force when button is not pushed down
         # self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
         # Above line and same for init  not needed at the moment but may be needed for other collisions
+
+    def sound(self):
+        pass
 
     def updatePoly(self):
         self.x, self.y = [], []  # Resets list of points so the previous points are not drawn again
@@ -102,7 +107,7 @@ class Player(pygame.sprite.Sprite):
         #sys.exit()
 
 class Asteroids(pygame.sprite.Sprite):
-    def __init__(self, xVel, yVel ,mass, spin):
+    def __init__(self, xPos, yPos, xVel, yVel ,mass, radius):
         pygame.sprite.Sprite.__init__(self)
         asteroidList.append(self)  # Put into list so it can be easily destroyed and checked for stuff like collisions
         self.polyList, self.xy, self.poly, self.velVector, self.pos = [], [], [], [], []
@@ -111,7 +116,12 @@ class Asteroids(pygame.sprite.Sprite):
         self.distance = 0
         self.radiiSum = 0
         # Making things random unless preassigned a value
-        if xVel == 0:  # Making the velocities random
+        if xPos == 0 and yPos == 0:
+            self.spawnPos()
+        else:
+            self.xPos = xPos
+            self.yPos = yPos
+        if xVel == 0 and yVel == 0:  # Making the velocities random
             self.xVel = random.uniform(-2, 2)
             self.yVel = random.uniform(-2, 2)
         else:  # Else already predefined
@@ -119,36 +129,49 @@ class Asteroids(pygame.sprite.Sprite):
             self.yVel = yVel
         if -0.2 <= self.xVel <= 0.2 or -0.2 <= self.yVel <= 0.2:  # Checking to see if it's to slow, if so, destroys it
             self.death()
-        if spin == 0:  # Same of spin
-            self.rotationSpeed = random.uniform(-0.05, 0.05)
+        if radius == 0:  # Same of spin
+            self.radius = random.randint(10, 100)
         else:
-            self.rotationSpeed = spin
-        self.radius = random.randint(10, 100)
+            self.radius = radius
         if mass == 0:
             self.mass = self.radius * self.density
         else:
             self.mass = mass
+        self.rotationSpeed = random.uniform(-0.05, 0.05)
         self.momentum = int(self.mass * math.sqrt(self.xVel ** 2 + self.yVel ** 2))
-        self.spawnPos()
         self.makeShape()
         self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
 
     def death(self):
-        asteroidList.remove(self)
+        if self in asteroidList:
+         asteroidList.remove(self)
+
+    def explodeSound(self):
+        thrustSound = pygame.mixer.Sound('Sounds/bangMedium.wav')
+        thrustSound.play()
+        volume(thrustSound)
 
     def hit(self):
-        if self.mass <= 2500:
-            self.death()
-        if self.mass > 2500:
-            for i in range (0,2):
-                Asteroids(0, 0, self.mass/2, 0)
+        self.explodeSound()
+        print(math.pi/4)
+        if self.mass >= 7500:
+            for i in range(0, 4):
+                self.newXVel = random.uniform(self.xVel - math.pi / 2, self.xVel + math.pi / 2)
+                self.newYVel = random.uniform(self.yVel - math.pi / 2, self.yVel + math.pi / 2)
+                Asteroids(self.xPos, self.yPos, self.newXVel, self.newYVel, self.mass/2, self.radius/2)
                 # new direction max 90 degrees maybe definitely random
         elif self.mass >= 5000:
-            for i in range (0,3):
-                Asteroids(0, 0, self.mass/3, 0)
-        elif self.mass >= 7500:
-            for i in range (0,4):
-                Asteroids(0, 0, self.mass/4, 0)
+            for i in range(0, 3):
+                self.newXVel = random.uniform(self.xVel - math.pi / 2, self.xVel + math.pi / 2)
+                self.newYVel = random.uniform(self.yVel - math.pi / 2, self.yVel + math.pi / 2)
+                Asteroids(self.xPos, self.yPos, self.newXVel, self.newYVel, self.mass/3, self.radius/3)
+        elif self.mass >= 2500:
+            for i in range(0, 2):
+                self.newXVel = random.uniform(self.xVel - math.pi / 2, self.xVel + math.pi / 2)
+                self.newYVel = random.uniform(self.yVel - math.pi / 2, self.yVel + math.pi / 2)
+                Asteroids(self.xPos, self.yPos, self.newXVel, self.newYVel, self.mass/4, self.radius/4)
+        else:
+            self.death()
 
     def makeShape(self):
         self.vertices = random.randint(12, 20)
@@ -195,6 +218,7 @@ class Asteroids(pygame.sprite.Sprite):
             self.death()
         for shot in shotList:
             if distance(shot.pos, self.pos) < shot.radius + self.radius:
+                self.hit()
                 shot.death()
                 self.death()
         # if pygame.sprite.collide_circle(self, player):
@@ -335,6 +359,7 @@ class Shot(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
         shotList.append(self)
+        self.sound()
         global shotSpeed
         global fired
         self.angle, self.xPos, self.yPos = player.angle, player.xPos, player.yPos
@@ -345,8 +370,11 @@ class Shot(pygame.sprite.Sprite):
         self.radius = 4
         self.pos = [self.xPos, self.yPos]
         self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
-        fireSound = pygame.mixer.Sound('fire.wav')
+
+    def sound(self):
+        fireSound = pygame.mixer.Sound('Sounds/fire.wav')
         fireSound.play()
+        volume(fireSound)
 
     def update(self):
         self.pos = [self.xPos, self.yPos]
@@ -439,7 +467,7 @@ def randPlanets():
 
 def randAsteroids():
     for i in range(0, numberOfAsteroids):  # Rotation , xPos, yPos
-        Asteroids(0, 0, 0, 0)
+        Asteroids(0, 0, 0, 0, 0, 0)
 
 def change():
     myfunc = next(itertools.cycle([0, 1]))
