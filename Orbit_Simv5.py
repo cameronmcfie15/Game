@@ -5,7 +5,7 @@ Rotate using surface for sprites
 Use better collisions
 need to define radius attribute somehow
 Use google sheets for high scores
-Add shields, gravity well
+Add shields, gravity well, difficulty (rate of aster spawns, lives)
 """
 
 import pygame, sys, random, math, time, threading, trace, itertools, profile
@@ -32,10 +32,11 @@ planetList, satList, missileList, shotList, asteroidList = [], [], [], [], []
 textList = {}
 text = ''
 numberOfPlanets = 0
-numberOfAsteroids = 5
+numberOfAsteroids = 0
+asteroidRate = 20  # cant be Zero, bigger the number the slower the spawn rate
 SIZE = 100, 100
 fired = 0  # Turns to 1 if shots have been fired
-lives = 0
+lives = 3
 score = 0
 timeCount = 0
 frames, actualFps, count, degrees = 0, 0, 0, 0
@@ -110,7 +111,8 @@ class Player(pygame.sprite.Sprite):
     def death(self):
         global lives
         lives -= 1
-        print("You died!")
+        if lives == 0:
+            print("You died!")
         #sys.exit()
 
 class Asteroids(pygame.sprite.Sprite):
@@ -151,7 +153,7 @@ class Asteroids(pygame.sprite.Sprite):
 
     def death(self):
         if self in asteroidList:
-         asteroidList.remove(self)
+            asteroidList.remove(self)
 
     def explodeSound(self):
         thrustSound = pygame.mixer.Sound('Sounds/bangMedium.wav')
@@ -227,6 +229,7 @@ class Asteroids(pygame.sprite.Sprite):
         #print(self.radiiSum, self.distance)
         if self.distance + 2 < player.radius + self.radius:  # the plus 2 gives a bit or breathing room
             self.death()
+            player.death()
         for shot in shotList:
             if distance(shot.pos, self.pos) < shot.radius + self.radius:
                 self.hit()
@@ -434,8 +437,12 @@ def hud():
     try:
         textList.update({"shot speed": "Shot Speed: "+str(shotSpeed)})
         textList.update({"score": "Score: "+str(score)})
+        textList.update({"spawn rate": "Asteroid Spawn Rate: " + str(numberOfAsteroids)})
+        textList.update({"lives": "Lives: " + str(lives)})
         screen.blit(font.render(textList["shot speed"], True, (colourDict['white'])), (32, 48))  # Last 2 digits are x,y
         screen.blit(font.render(textList["score"], True, (colourDict['white'])), (32, 48+18))  # add plus 18 4 new line
+        screen.blit(font.render(textList["spawn rate"], True, (colourDict['white'])), (32, 48 + 2 * 18))
+        screen.blit(font.render(textList["lives"], True, (colourDict['white'])), (32, 48 + 3 * 18))
     except Exception as e:
         print(e)
 
@@ -477,6 +484,10 @@ def randPlanets():
         print(count)
 
 def randAsteroids():
+    global numberOfAsteroids
+    global asteroidRate
+    if timeCount % asteroidRate == 0:
+        numberOfAsteroids += 1
     for i in range(0, numberOfAsteroids):  # Rotation , xPos, yPos
         Asteroids(0, 0, 0, 0, 0, 0)
 
