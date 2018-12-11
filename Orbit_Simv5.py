@@ -4,6 +4,8 @@ TO DO:
 Rotate using surface for sprites 
 Use better collisions
 need to define radius attribute somehow
+Use google sheets for high scores
+Add shields, gravity well
 """
 
 import pygame, sys, random, math, time, threading, trace, itertools, profile
@@ -27,12 +29,15 @@ pygame.Surface.convert(bg)  # Don't have to do this. but meant to
 posMovement = 0.00001
 shotSpeed = 5
 planetList, satList, missileList, shotList, asteroidList = [], [], [], [], []
+textList = {}
 text = ''
 numberOfPlanets = 0
 numberOfAsteroids = 5
 SIZE = 100, 100
 fired = 0  # Turns to 1 if shots have been fired
 lives = 0
+score = 0
+timeCount = 0
 frames, actualFps, count, degrees = 0, 0, 0, 0
 # Constants
 Mass = 4*10**13  # Mass of Centre   5.972*10**24
@@ -56,7 +61,7 @@ def distance(v1, v2):  # Vectors 1 and 2
     return math.sqrt((v1[0]-v2[0])**2 + (v1[1]-v2[1])**2)
 
 def volume(sound):
-    return sound.set_volume(0.1)
+    return sound.set_volume(0.0)
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -103,6 +108,8 @@ class Player(pygame.sprite.Sprite):
         self.yPos += self.yVel
 
     def death(self):
+        global lives
+        lives -= 1
         print("You died!")
         #sys.exit()
 
@@ -152,25 +159,29 @@ class Asteroids(pygame.sprite.Sprite):
         volume(thrustSound)
 
     def hit(self):
+        global score
         self.explodeSound()
-        print(math.pi/4)
         if self.mass >= 7500:
             for i in range(0, 4):
+                score += 100
                 self.newXVel = random.uniform(self.xVel - math.pi / 2, self.xVel + math.pi / 2)
                 self.newYVel = random.uniform(self.yVel - math.pi / 2, self.yVel + math.pi / 2)
-                Asteroids(self.xPos, self.yPos, self.newXVel, self.newYVel, self.mass/2, self.radius/2)
+                Asteroids(self.xPos, self.yPos, self.newXVel, self.newYVel, self.mass/2, self.radius/4)
                 # new direction max 90 degrees maybe definitely random
         elif self.mass >= 5000:
             for i in range(0, 3):
+                score += 75
                 self.newXVel = random.uniform(self.xVel - math.pi / 2, self.xVel + math.pi / 2)
                 self.newYVel = random.uniform(self.yVel - math.pi / 2, self.yVel + math.pi / 2)
                 Asteroids(self.xPos, self.yPos, self.newXVel, self.newYVel, self.mass/3, self.radius/3)
         elif self.mass >= 2500:
             for i in range(0, 2):
+                score += 50
                 self.newXVel = random.uniform(self.xVel - math.pi / 2, self.xVel + math.pi / 2)
                 self.newYVel = random.uniform(self.yVel - math.pi / 2, self.yVel + math.pi / 2)
-                Asteroids(self.xPos, self.yPos, self.newXVel, self.newYVel, self.mass/4, self.radius/4)
+                Asteroids(self.xPos, self.yPos, self.newXVel, self.newYVel, self.mass/4, self.radius/2)
         else:
+            score += 25
             self.death()
 
     def makeShape(self):
@@ -310,15 +321,15 @@ class Missile:
         self.xAcceleration, self.yAcceleration, self.force, self.xVel, self.yVel = 0, 0, 0, 0, 0
         self.adjacent, self.opposite, self.count = 0, 0, 0
         self.distance = 100
-        self.rocket = pygame.image.load('missile1.png')
+        self.rocket = pygame.image.load('Images/missile1.png')
         self.rect = self.rocket.get_rect()
         missileList.append(self)
 
     def update(self):
         if frames % 2 == 0:
-            self.rocket = pygame.image.load('missile1.png')
+            self.rocket = pygame.image.load('Images/missile1.png')
         else:
-            self.rocket = pygame.image.load('missile2.png')
+            self.rocket = pygame.image.load('Images/missile2.png')
         self.positionUpdate()
         #if timeSec > 15:
         #    self.kill()
@@ -332,22 +343,21 @@ class Missile:
         global count
         count += 1
         #missileList.remove(self)
-        planetList.pop(0)
         print('died', count)
         rocketSpeed = 0
 
     def positionUpdate(self):
-        self.distance = math.sqrt(((planetList[self.target].xPos - self.xPos) ** 2) + ((planetList[self.target].yPos - self.yPos) ** 2))
+        self.distance = math.sqrt(((self.target.xPos - self.xPos) ** 2) + ((self.target.yPos - self.yPos) ** 2))
         #self.line = pygame.draw.line(screen, colourDict['white'], (self.xPos, self.yPos), (earth.xPos, earth.yPos), 1)
-        self.opposite = (planetList[self.target].yPos - self.yPos)  # Works out distance between the y axis
-        self.adjacent = (planetList[self.target].xPos - self.xPos)  # Works out distance between the x axis
+        self.opposite = (self.target.yPos - self.yPos)  # Works out distance between the y axis
+        self.adjacent = (self.target.xPos - self.xPos)  # Works out distance between the x axis
         #self.angle = math.atan2(self.opposite, self.adjacent)
         #self.xVel = math.cos(self.angle)*self.distance*0.05
         #self.yVel = math.sin(self.angle)*self.distance*0.05
         self.xVel = (self.adjacent/self.distance)
         self.yVel = (self.opposite/self.distance)
-        self.xPos += self.xVel * timeSec  # Time sec works well for 1 target but needs to reset for multiply tartgets
-        self.yPos += self.yVel * timeSec
+        self.xPos += self.xVel # * timeSec  # Time sec works well for 1 target but needs to reset for multiply tartgets
+        self.yPos += self.yVel # * timeSec
         self.rotater()
 
     def rotater(self):
@@ -421,10 +431,11 @@ def keyboard():
         player.force = 0.4
 
 def hud():
-    global text
     try:
-        text = str(shotSpeed)
-        screen.blit(font.render(text, True, (colourDict['white'])), (32, 48))
+        textList.update({"shot speed": "Shot Speed: "+str(shotSpeed)})
+        textList.update({"score": "Score: "+str(score)})
+        screen.blit(font.render(textList["shot speed"], True, (colourDict['white'])), (32, 48))  # Last 2 digits are x,y
+        screen.blit(font.render(textList["score"], True, (colourDict['white'])), (32, 48+18))  # add plus 18 4 new line
     except Exception as e:
         print(e)
 
@@ -472,6 +483,8 @@ def randAsteroids():
 def change():
     myfunc = next(itertools.cycle([0, 1]))
     return myfunc
+    # PLus 1
+    # When divisible by 2
 
 def menu():
     pass
@@ -479,15 +492,17 @@ def menu():
 def main():
     global center  # A bit messy try clean up
     global totFrames
+    global timeCount
     totFrames = 0
     frames = 0
     text = ""
-    sTime = time.time()
+    s_time = time.time()
     global timeSec
     global startTime
     startTime = time.time()
     while True:  # main game loop
-        screen.blit(bg,(0,0))  # Resets the screen
+        screen.fill(colourDict['black'])
+        #screen.blit(bg,(0,0))  # Resets the screen
         hud()
         randColour = list(np.random.choice(range(256), size=3))
         timeSec = (pygame.time.get_ticks() - start_ticks) / 1000  # Time in Seconds
@@ -498,10 +513,11 @@ def main():
         pressed = pygame.key.get_pressed()
         if 1 in pressed:
             keyboard()
-        eTime = time.time()
-        if eTime-sTime > 1:  # Is true when one seconds has passed
+        e_time = time.time()
+        if e_time-s_time > 1:  # Is true when one seconds has passed
+            timeCount += 1
             print(text)
-            sTime = time.time()
+            s_time = time.time()
             text = str(frames)
             frames = 0
             randAsteroids()
@@ -513,6 +529,7 @@ def main():
 
 if __name__ == '__main__':
     player = Player()
+    #Missile(0, 0, player)
     randAsteroids()
     main()
     #profile.run('main()')
