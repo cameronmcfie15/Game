@@ -31,9 +31,11 @@ shotSpeed = 5
 planetList, satList, missileList, shotList, asteroidList = [], [], [], [], []
 textList = {}
 text = ''
+cash = 0
+shieldHealth = 0
 numberOfPlanets = 0
 numberOfAsteroids = 0
-asteroidRate = 20  # cant be Zero, bigger the number the slower the spawn rate
+asteroidRate = 50  # cant be Zero, bigger the number the slower the spawn rate
 SIZE = 100, 100
 fired = 0  # Turns to 1 if shots have been fired
 lives = 3
@@ -61,8 +63,10 @@ def timeTaken():  # Function that calculates framerate of the application and wr
 def distance(v1, v2):  # Vectors 1 and 2
     return math.sqrt((v1[0]-v2[0])**2 + (v1[1]-v2[1])**2)
 
+
 def volume(sound):
     return sound.set_volume(0.0)
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -72,9 +76,13 @@ class Player(pygame.sprite.Sprite):
         self.decay = 0.98
         self.radius = 20
         self.triangle, self.x, self.y, self.velVector = [], [], [], []
+        self.shield = shieldHealth
         # self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
 
     def update(self):  # Is called every tick
+        if self.shield >= 1:
+            pygame.draw.circle(screen, colourDict['white'], (int(self.xPos), int(self.yPos)), self.radius+5, 2)
+
         self.updatePoly()
         self.posistionUpdate()
         self.velVector = [math.atan2(self.xVel, self.yVel), math.sqrt(self.xVel**2+self.yVel**2)]  # Theta ,absolute
@@ -108,11 +116,15 @@ class Player(pygame.sprite.Sprite):
         self.xPos += self.xVel
         self.yPos += self.yVel
 
-    def death(self):
+    def hit(self):
         global lives
-        lives -= 1
-        if lives == 0:
-            print("You died!")
+        global shieldHealth
+        if self.shield >= 1:
+            self.shield -= 1
+        else:
+            lives -= 1
+            if lives == 0:
+                print("You died!")
         #sys.exit()
 
 class Asteroids(pygame.sprite.Sprite):
@@ -162,28 +174,33 @@ class Asteroids(pygame.sprite.Sprite):
 
     def hit(self):
         global score
+        global cash
         self.explodeSound()
         if self.mass >= 7500:
+            score += 100
+            cash += 1
             for i in range(0, 4):
-                score += 100
                 self.newXVel = random.uniform(self.xVel - math.pi / 2, self.xVel + math.pi / 2)
                 self.newYVel = random.uniform(self.yVel - math.pi / 2, self.yVel + math.pi / 2)
                 Asteroids(self.xPos, self.yPos, self.newXVel, self.newYVel, self.mass/2, self.radius/4)
                 # new direction max 90 degrees maybe definitely random
         elif self.mass >= 5000:
+            score += 75
+            cash += 0.75
             for i in range(0, 3):
-                score += 75
                 self.newXVel = random.uniform(self.xVel - math.pi / 2, self.xVel + math.pi / 2)
                 self.newYVel = random.uniform(self.yVel - math.pi / 2, self.yVel + math.pi / 2)
                 Asteroids(self.xPos, self.yPos, self.newXVel, self.newYVel, self.mass/3, self.radius/3)
         elif self.mass >= 2500:
+            score += 50
+            cash += 0.50
             for i in range(0, 2):
-                score += 50
                 self.newXVel = random.uniform(self.xVel - math.pi / 2, self.xVel + math.pi / 2)
                 self.newYVel = random.uniform(self.yVel - math.pi / 2, self.yVel + math.pi / 2)
                 Asteroids(self.xPos, self.yPos, self.newXVel, self.newYVel, self.mass/4, self.radius/2)
         else:
             score += 25
+            cash += 0.25
             self.death()
 
     def makeShape(self):
@@ -229,19 +246,12 @@ class Asteroids(pygame.sprite.Sprite):
         #print(self.radiiSum, self.distance)
         if self.distance + 2 < player.radius + self.radius:  # the plus 2 gives a bit or breathing room
             self.death()
-            player.death()
+            player.hit()
         for shot in shotList:
             if distance(shot.pos, self.pos) < shot.radius + self.radius:
                 self.hit()
                 shot.death()
                 self.death()
-        # if pygame.sprite.collide_circle(self, player):
-        #     self.death()
-        #     player.death()
-        # for shot in shotList:
-        #     if pygame.sprite.collide_circle(self, shot):
-        #         self.death()
-        #         shot.death()
 
 
     def posistionUpdate(self):
@@ -412,23 +422,28 @@ class Shot(pygame.sprite.Sprite):
 def keyboard():
     global pressed
     global shotSpeed
+    global shieldHealth
     pressed = pygame.key.get_pressed()
-    if pressed[pygame.K_RIGHT]:
-        player.moveRight()
-        #planetList[0].xVel += posMovement
+    if pressed[pygame.K_5]:
+        player.shield = 5
 
     if pressed[pygame.K_4]:
-        shotSpeed = 20
+        pass
+        #shotSpeed = 20
+
 
     if pressed[pygame.K_3]:
-        shotSpeed = 15
+        pass
+        #shotSpeed = 15
 
     if pressed[pygame.K_2]:
-        shotSpeed = 10
+        pass
+        #shotSpeed = 5
         #planetList[0].yVel += posMovement
 
     if pressed[pygame.K_1]:
-        shotSpeed = 5
+        if shotSpeed < 40:
+            shotSpeed += 5
 
     if pressed[pygame.K_SPACE]:
         player.force = 0.4
@@ -439,10 +454,14 @@ def hud():
         textList.update({"score": "Score: "+str(score)})
         textList.update({"spawn rate": "Asteroid Spawn Rate: " + str(numberOfAsteroids)})
         textList.update({"lives": "Lives: " + str(lives)})
+        textList.update({"shield": "Shield: " + str(player.shield)})
+        textList.update({"cash": "Cash: " + str(cash)})
         screen.blit(font.render(textList["shot speed"], True, (colourDict['white'])), (32, 48))  # Last 2 digits are x,y
         screen.blit(font.render(textList["score"], True, (colourDict['white'])), (32, 48+18))  # add plus 18 4 new line
         screen.blit(font.render(textList["spawn rate"], True, (colourDict['white'])), (32, 48 + 2 * 18))
         screen.blit(font.render(textList["lives"], True, (colourDict['white'])), (32, 48 + 3 * 18))
+        screen.blit(font.render(textList["shield"], True, (colourDict['white'])), (32, 48 + 4 * 18))
+        screen.blit(font.render(textList["cash"], True, (colourDict['white'])), (32, 48 + 5 * 18))
     except Exception as e:
         print(e)
 
