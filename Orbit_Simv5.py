@@ -31,6 +31,7 @@ colourDict = {'white': (255, 255, 255), 'brown': (160, 82, 45), 'black': (0, 0, 
 bg = pygame.image.load('Images/background1.png')  # Loads in the background image
 heart = pygame.image.load('Images/Heart.png')
 pygame.Surface.convert(bg)  # Don't have to do this. but meant to
+#  Some of these Things that can be reset
 posMovement = 0.00001
 shotSpeed = 5
 planetList, satList, missileList, shotList, asteroidList = [], [], [], [], []
@@ -460,9 +461,11 @@ def keyboard():
 def hud():
     global livesStr
     try:  # Last 2 digits are x,y     add plus 18 for new line
+        if lives <= 0:
+            screen.blit(font.render("YOU DIED!", True, (colourDict['white'])), (width/2-48, height/2))
+
         for x in range(lives):
             screen.blit(heart, (18 * (5+x), 22))
-
         textList.update({"shot speed": "Shot Speed: "+str(shotSpeed)})
         textList.update({"score": "Score: "+str(score)})
         textList.update({"spawn rate": "Asteroid Spawn Rate: " + str(numberOfAsteroids)})
@@ -470,12 +473,12 @@ def hud():
         textList.update({"shield": "Shield: " + str(player.shield)})
         textList.update({"cash": "Credits: " + str(cash)})
         screen.blit(font.render(textList["shot speed"], True, (colourDict['white'])), (width-172, 16 + 1 * 18))
-        screen.blit(font.render(textList["score"], True, (colourDict['white'])), (width/2-32, 16))
+        screen.blit(font.render(textList["score"], True, (colourDict['white'])), (width/2-48, 16))
         screen.blit(font.render(textList["lives"], True, (colourDict['white'])), (32, 16 + 0 * 18))
         screen.blit(font.render(textList["spawn rate"], True, (colourDict['white'])), (32, 16 + 1 * 18))
         screen.blit(font.render(textList["shield"], True, (colourDict['white'])), (32, 16 + 2 * 18))
         screen.blit(font.render(textList["cash"], True, (colourDict['white'])), (width-172, 16 + 0 * 18))
-        screen.blit(font.render("Frame Rate:"+frameRate, True, (colourDict['white'])), (width/2-32, 16 + 1 * 18))
+        screen.blit(font.render("Frame Rate:"+frameRate, True, (colourDict['white'])), (width/2-48, 16 + 1 * 18))
     except Exception as e:
         print(e)
 
@@ -545,6 +548,23 @@ def main():
     global timeSec
     global startTime
     startTime = time.time()
+
+    print(dir(player))
+    # shotSpeed = 5
+    # planetList, satList, missileList, shotList, asteroidList = [], [], [], [], []
+    # textList = {}
+    # text = ''
+    # cash = 0
+    # shieldHealth = 0
+    # numberOfAsteroids = 0  # Number of asteroids per second
+    # fired = 0  # Turns to 1 if shots have been fired
+    # lives = 3
+    # score = 0
+    # timeCount = 0
+    # frameRate = ''
+    # frames, actualFps, count, degrees = 0, 0, 0, 0
+    #
+
     while True:  # main game loop
         screen.fill(colourDict['black'])
         #screen.blit(bg,(0,0))  # Resets the screen
@@ -575,10 +595,13 @@ def main():
 
 if __name__ == '__main__':
     player = Player()
-    #Missile(0, 0, player)
+    # Missile(0, 0, player)
     randAsteroids()
+
     main()
-    #profile.run('main()')
+
+
+    # profile.run('start()')    #or main()
 
 # scaled = pygame.transform.scale(sol, (20, 20))
 # rotated = pygame.transform.rotate(scaled, degrees)
