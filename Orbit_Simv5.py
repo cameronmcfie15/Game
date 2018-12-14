@@ -8,23 +8,28 @@ Use google sheets for high scores
 Add shields, gravity well, difficulty (rate of aster spawns, lives)
 """
 
-import pygame, sys, random, math, time, threading, trace, itertools, profile
+import pygame, sys, random, math, time, threading, trace, itertools, profile, os
 import numpy as np
+from win32api import GetSystemMetrics
+
 
 # --Setup--
 # Declaring / Assigning Variable
 pygame.init()  # Inizialises all of pygame
+monitorWidth = (GetSystemMetrics(0))
+os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % ((monitorWidth-1280)/2, 50)  # Location of Window
 #pygame.mixer.init()  # Inizialises sound in pygame
 fps = 60  # Framerate, controls physics
 fpsClock = pygame.time.Clock()  # Sets up the pygame clock
 start_ticks = pygame.time.get_ticks()
-width, height = 1200, 900  # Window dimensions
+width, height = 1280, 960  # Window dimensions
 screen = pygame.display.set_mode((width, height))  # Sets up the screen
 font = pygame.font.SysFont('Verdana', 18)  # Sets up the Font
 center = height/2
 randColour = list(np.random.choice(range(256), size=3))  # Returns a random colour
 colourDict = {'white': (255, 255, 255), 'brown': (160, 82, 45), 'black': (0, 0, 0)}  # Predefined dictionary of colours
 bg = pygame.image.load('Images/background1.png')  # Loads in the background image
+heart = pygame.image.load('Images/Heart.png')
 pygame.Surface.convert(bg)  # Don't have to do this. but meant to
 posMovement = 0.00001
 shotSpeed = 5
@@ -41,11 +46,14 @@ fired = 0  # Turns to 1 if shots have been fired
 lives = 3
 score = 0
 timeCount = 0
+frameRate = ''
 frames, actualFps, count, degrees = 0, 0, 0, 0
 # Constants
 Mass = 4*10**13  # Mass of Centre   5.972*10**24
 G = 6.67*10**-11  # Gravity Constant    6.67*10**-11
-
+# Other Setup
+pygame.Surface.convert(bg)
+heart = pygame.transform.scale(heart, (12, 12))
 # --All the functions --
 
 
@@ -71,7 +79,7 @@ def volume(sound):
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.xPos, self.yPos = 500, 500
+        self.xPos, self.yPos = width/2, height/2
         self.xVel, self.yVel, self.xAcceleration, self.yAcceleration, self.force, self.angle = 0, 0, 0, 0, 0, 0
         self.decay = 0.98
         self.radius = 20
@@ -450,19 +458,24 @@ def keyboard():
         player.force = 0.4
 
 def hud():
-    try:
+    global livesStr
+    try:  # Last 2 digits are x,y     add plus 18 for new line
+        for x in range(lives):
+            screen.blit(heart, (18 * (5+x), 22))
+
         textList.update({"shot speed": "Shot Speed: "+str(shotSpeed)})
         textList.update({"score": "Score: "+str(score)})
         textList.update({"spawn rate": "Asteroid Spawn Rate: " + str(numberOfAsteroids)})
-        textList.update({"lives": "Lives: " + str(lives)})
+        textList.update({"lives": "Lives: "})
         textList.update({"shield": "Shield: " + str(player.shield)})
-        textList.update({"cash": "Cash: " + str(cash)})
-        screen.blit(font.render(textList["shot speed"], True, (colourDict['white'])), (32, 48))  # Last 2 digits are x,y
-        screen.blit(font.render(textList["score"], True, (colourDict['white'])), (32, 48+18))  # add plus 18 4 new line
-        screen.blit(font.render(textList["spawn rate"], True, (colourDict['white'])), (32, 48 + 2 * 18))
-        screen.blit(font.render(textList["lives"], True, (colourDict['white'])), (32, 48 + 3 * 18))
-        screen.blit(font.render(textList["shield"], True, (colourDict['white'])), (32, 48 + 4 * 18))
-        screen.blit(font.render(textList["cash"], True, (colourDict['white'])), (32, 48 + 5 * 18))
+        textList.update({"cash": "Credits: " + str(cash)})
+        screen.blit(font.render(textList["shot speed"], True, (colourDict['white'])), (width-172, 16 + 1 * 18))
+        screen.blit(font.render(textList["score"], True, (colourDict['white'])), (width/2-32, 16))
+        screen.blit(font.render(textList["lives"], True, (colourDict['white'])), (32, 16 + 0 * 18))
+        screen.blit(font.render(textList["spawn rate"], True, (colourDict['white'])), (32, 16 + 1 * 18))
+        screen.blit(font.render(textList["shield"], True, (colourDict['white'])), (32, 16 + 2 * 18))
+        screen.blit(font.render(textList["cash"], True, (colourDict['white'])), (width-172, 16 + 0 * 18))
+        screen.blit(font.render("Frame Rate:"+frameRate, True, (colourDict['white'])), (width/2-32, 16 + 1 * 18))
     except Exception as e:
         print(e)
 
@@ -528,6 +541,7 @@ def main():
     frames = 0
     text = ""
     s_time = time.time()
+    global frameRate
     global timeSec
     global startTime
     startTime = time.time()
@@ -550,6 +564,7 @@ def main():
             print(text)
             s_time = time.time()
             text = str(frames)
+            frameRate = text
             frames = 0
             randAsteroids()
 
