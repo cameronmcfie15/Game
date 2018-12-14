@@ -419,6 +419,7 @@ class Shot(pygame.sprite.Sprite):
     def death(self):
         shotList.remove(self)
 
+
 def keyboard():
     global pressed
     global shotSpeed
