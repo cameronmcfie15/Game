@@ -86,6 +86,7 @@ class Player(pygame.sprite.Sprite):
         self.radius = 20
         self.triangle, self.x, self.y, self.velVector = [], [], [], []
         self.shield = shieldHealth
+        self.deathTime = 0
         # self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
 
     def update(self):  # Is called every tick
@@ -128,12 +129,15 @@ class Player(pygame.sprite.Sprite):
     def hit(self):
         global lives
         global shieldHealth
+        global died
         if self.shield >= 1:
             self.shield -= 1
         else:
             lives -= 1
             if lives == 0:
                 print("You died!")
+                self.deathTime = timeCount
+                died = True
         #sys.exit()
 
 class Asteroids(pygame.sprite.Sprite):
@@ -460,12 +464,12 @@ def keyboard():
 
 def hud():
     global livesStr
+    global died
     try:  # Last 2 digits are x,y     add plus 18 for new line
-        if lives <= 0:
-            screen.blit(font.render("YOU DIED!", True, (colourDict['white'])), (width/2-48, height/2))
-
         for x in range(lives):
             screen.blit(heart, (18 * (5+x), 22))
+        if died:
+            screen.blit(font.render("YOU DIED!", True, (colourDict['white'])), (width / 2 - 48, height / 2))
         textList.update({"shot speed": "Shot Speed: "+str(shotSpeed)})
         textList.update({"score": "Score: "+str(score)})
         textList.update({"spawn rate": "Asteroid Spawn Rate: " + str(numberOfAsteroids)})
@@ -536,41 +540,29 @@ def change():
 def menu():
     pass
 
-def main():
-    global center  # A bit messy try clean up
-    global totFrames
-    global timeCount
-    totFrames = 0
-    frames = 0
-    text = ""
+
+def main():  # A bit messy try clean up
+    global center, totFrames, timeCount, frameRate, shotSpeed, textList, cash, numberOfAsteroids
+    global planetList, satList, missileList, shotList, asteroidList, shieldHealth, lives, score, timeCount, frameRate
+    global frames, actualFps, count, degrees, fired, text, pressed, randColour, startTime, died
+    frames, actualFps, count, degrees, score, timeCount, totFrames, frames, cash = 0, 0, 0, 0, 0, 0, 0, 0, 0
+    planetList, satList, missileList, shotList, asteroidList = [], [], [], [], []
+    shieldHealth, fired = 0, 0  # Turns to 1 if shots have been fired
+    shotSpeed = 5
+    textList = {}
+    text, frameRate = '', ''
+    numberOfAsteroids = 5  # Number of asteroids per second
+    lives = 3
+    died = False
     s_time = time.time()
-    global frameRate
-    global timeSec
-    global startTime
     startTime = time.time()
 
-    print(dir(player))
-    # shotSpeed = 5
-    # planetList, satList, missileList, shotList, asteroidList = [], [], [], [], []
-    # textList = {}
-    # text = ''
-    # cash = 0
-    # shieldHealth = 0
-    # numberOfAsteroids = 0  # Number of asteroids per second
-    # fired = 0  # Turns to 1 if shots have been fired
-    # lives = 3
-    # score = 0
-    # timeCount = 0
-    # frameRate = ''
-    # frames, actualFps, count, degrees = 0, 0, 0, 0
-    #
+
 
     while True:  # main game loop
         screen.fill(colourDict['black'])
-        #screen.blit(bg,(0,0))  # Resets the screen
         hud()
         randColour = list(np.random.choice(range(256), size=3))
-        timeSec = (pygame.time.get_ticks() - start_ticks) / 1000  # Time in Seconds
         updater()
         eventHandler()
         pygame.display.update()
@@ -590,8 +582,11 @@ def main():
 
         screen.blit(font.render(text, True, (colourDict['white'])), (32, 48))
         frames += 1
-        totFrames += 1
-
+        if player.deathTime != 0:
+            if timeCount - player.deathTime > 5:
+                died = False
+                player.deathTime = 0
+                main()
 
 if __name__ == '__main__':
     player = Player()
