@@ -129,6 +129,11 @@ class Player(pygame.sprite.Sprite):
         self.cash = 0
         #sys.exit()
 
+    def buyMenu(self):
+        if self.cash >= 5:
+            self.shield += 1
+            self.cash -= 5
+
 
 class Asteroids(pygame.sprite.Sprite):
     def __init__(self, xPos, yPos, xVel, yVel ,mass, radius):
@@ -421,11 +426,17 @@ class Shot(pygame.sprite.Sprite):
         shotList.remove(self)
 
 
+class Alien:
+    def __init__(self):
+        pass
+
+
 def keyboard(pressed):
     if pressed[pygame.K_5]:
-        player.shield = 5
+        pass
 
-    if pressed[pygame.K_4]:
+    if pressed[pygame.K_b]:
+        player.buyMenu()
         pass
 
     if pressed[pygame.K_3]:
@@ -435,8 +446,7 @@ def keyboard(pressed):
         pass
 
     if pressed[pygame.K_1]:
-        if player.shotSpeed < 40:
-            player.shotSpeed += 1
+        pass
 
     if pressed[pygame.K_SPACE]:
         player.force = 0.4
