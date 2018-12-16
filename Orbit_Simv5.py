@@ -67,8 +67,13 @@ class Player(pygame.sprite.Sprite):
         self.decay = 0.98
         self.radius = 20
         self.triangle, self.x, self.y, self.velVector = [], [], [], []
-        self.shield = shieldHealth
         self.deathTime = 0
+        self.cash = 0
+        self.shotSpeed = 5
+        self.shield = 0
+        self.lives = 3
+        self.score = 0
+        self.died = False
         # self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
 
     def update(self):  # Is called every tick
@@ -109,18 +114,21 @@ class Player(pygame.sprite.Sprite):
         self.yPos += self.yVel
 
     def hit(self):
-        global lives
-        global shieldHealth
-        global died
         if self.shield >= 1:
             self.shield -= 1
         else:
-            lives -= 1
-            if lives == 0:
+            player.lives -= 1
+            if player.lives == 0:
                 print("You died!")
                 self.deathTime = timeCount
-                died = True
+                player.died = True
+                self.reset()
+
+    def reset(self):
+        self.shotSpeed = 0
+        self.cash = 0
         #sys.exit()
+
 
 class Asteroids(pygame.sprite.Sprite):
     def __init__(self, xPos, yPos, xVel, yVel ,mass, radius):
@@ -168,34 +176,32 @@ class Asteroids(pygame.sprite.Sprite):
         volume(thrustSound)
 
     def hit(self):
-        global score
-        global cash
         self.explodeSound()
         if self.mass >= 7500:
-            score += 100
-            cash += 1
+            player.score += 100
+            player.cash += 1
             for i in range(0, 4):
                 self.newXVel = random.uniform(self.xVel - math.pi / 2, self.xVel + math.pi / 2)
                 self.newYVel = random.uniform(self.yVel - math.pi / 2, self.yVel + math.pi / 2)
                 Asteroids(self.xPos, self.yPos, self.newXVel, self.newYVel, self.mass/2, self.radius/4)
                 # new direction max 90 degrees maybe definitely random
         elif self.mass >= 5000:
-            score += 75
-            cash += 0.75
+            player.score += 75
+            player.cash += 0.75
             for i in range(0, 3):
                 self.newXVel = random.uniform(self.xVel - math.pi / 2, self.xVel + math.pi / 2)
                 self.newYVel = random.uniform(self.yVel - math.pi / 2, self.yVel + math.pi / 2)
                 Asteroids(self.xPos, self.yPos, self.newXVel, self.newYVel, self.mass/3, self.radius/3)
         elif self.mass >= 2500:
-            score += 50
-            cash += 0.50
+            player.score += 50
+            player.cash += 0.50
             for i in range(0, 2):
                 self.newXVel = random.uniform(self.xVel - math.pi / 2, self.xVel + math.pi / 2)
                 self.newYVel = random.uniform(self.yVel - math.pi / 2, self.yVel + math.pi / 2)
                 Asteroids(self.xPos, self.yPos, self.newXVel, self.newYVel, self.mass/4, self.radius/2)
         else:
-            score += 25
-            cash += 0.25
+            player.score += 25
+            player.cash += 0.25
             self.death()
 
     def makeShape(self):
@@ -373,17 +379,17 @@ class Missile:
         self.rotated = pygame.transform.rotate(self.rocket, math.degrees(self.direction)-90)
         self.missile = screen.blit(self.rotated, (self.xPos, self.yPos))
 
+
 class Shot(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
         shotList.append(self)
         self.sound()
-        global shotSpeed
         global fired
         self.angle, self.xPos, self.yPos = player.angle, player.xPos, player.yPos
         fired = 1
-        self.xVel = math.sin(self.angle) * shotSpeed
-        self.yVel = math.cos(self.angle) * shotSpeed
+        self.xVel = math.sin(self.angle) * player.shotSpeed
+        self.yVel = math.cos(self.angle) * player.shotSpeed
         self.distance = 0
         self.radius = 4
         self.pos = [self.xPos, self.yPos]
@@ -415,49 +421,39 @@ class Shot(pygame.sprite.Sprite):
         shotList.remove(self)
 
 
-def keyboard():
-    global pressed
-    global shotSpeed
-    global shieldHealth
-    pressed = pygame.key.get_pressed()
+def keyboard(pressed):
     if pressed[pygame.K_5]:
         player.shield = 5
 
     if pressed[pygame.K_4]:
         pass
-        #shotSpeed = 20
-
 
     if pressed[pygame.K_3]:
         pass
-        #shotSpeed = 15
 
     if pressed[pygame.K_2]:
         pass
-        #shotSpeed = 5
-        #planetList[0].yVel += posMovement
 
     if pressed[pygame.K_1]:
-        if shotSpeed < 40:
-            shotSpeed += 5
+        if player.shotSpeed < 40:
+            player.shotSpeed += 1
 
     if pressed[pygame.K_SPACE]:
         player.force = 0.4
 
+
 def hud():
-    global livesStr
-    global died
     try:  # Last 2 digits are x,y     add plus 18 for new line
-        for x in range(lives):
+        for x in range(player.lives):
             screen.blit(heart, (18 * (5+x), 22))
-        if died:
+        if player.died:
             screen.blit(font.render("YOU DIED!", True, (colourDict['white'])), (width / 2 - 48, height / 2))
-        textList.update({"shot speed": "Shot Speed: "+str(shotSpeed)})
-        textList.update({"score": "Score: "+str(score)})
+        textList.update({"shot speed": "Shot Speed: "+str(player.shotSpeed)})
+        textList.update({"score": "Score: "+str(player.score)})
         textList.update({"spawn rate": "Asteroid Spawn Rate: " + str(numberOfAsteroids)})
         textList.update({"lives": "Lives: "})
         textList.update({"shield": "Shield: " + str(player.shield)})
-        textList.update({"cash": "Credits: " + str(cash)})
+        textList.update({"cash": "Credits: " + str(player.cash)})
         screen.blit(font.render(textList["shot speed"], True, (colourDict['white'])), (width-172, 16 + 1 * 18))
         screen.blit(font.render(textList["score"], True, (colourDict['white'])), (width/2-48, 16))
         screen.blit(font.render(textList["lives"], True, (colourDict['white'])), (32, 16 + 0 * 18))
@@ -467,6 +463,7 @@ def hud():
         screen.blit(font.render("Frame Rate:"+frameRate, True, (colourDict['white'])), (width/2-48, 16 + 1 * 18))
     except Exception as e:
         print(e)
+
 
 def updater():  # print(len(planetList))
     for planet in planetList:
@@ -482,6 +479,7 @@ def updater():  # print(len(planetList))
         for shot in shotList:
             shot.update()
 
+
 def eventHandler():
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -489,6 +487,7 @@ def eventHandler():
             sys.exit()
         if event.type == pygame.MOUSEBUTTONDOWN:
             Shot()
+
 
 def randPlanets():
     count = 0
@@ -505,6 +504,7 @@ def randPlanets():
         #Missile(500, 500, count)
         print(count)
 
+
 def randAsteroids():
     global timeCount
     global numberOfAsteroids
@@ -514,30 +514,30 @@ def randAsteroids():
     for i in range(0, numberOfAsteroids):  # Rotation , xPos, yPos
         Asteroids(0, 0, 0, 0, 0, 0)
 
+
 def change():
     myfunc = next(itertools.cycle([0, 1]))
     return myfunc
     # PLus 1
     # When divisible by 2
 
+
 def menu():
     pass
 
 
 def main():  # A bit messy try clean up
-    global center, totFrames, timeCount, frameRate, shotSpeed, textList, cash, numberOfAsteroids, player
-    global planetList, satList, missileList, shotList, asteroidList, shieldHealth, lives, score, timeCount, frameRate
-    global frames, actualFps, count, degrees, fired, text, pressed, randColour, startTime, died, asteroidRate
+    global center, totFrames, timeCount, frameRate, textList, numberOfAsteroids, player
+    global planetList, satList, missileList, shotList, asteroidList, frameRate
+    global frames, actualFps, count, degrees, fired, text, randColour, startTime, asteroidRate
+
     frames, actualFps, count, degrees, score, timeCount, totFrames, frames, cash = 0, 0, 0, 0, 0, 0, 0, 0, 0
     planetList, satList, missileList, shotList, asteroidList = [], [], [], [], []
-    shieldHealth, fired = 0, 0  # Turns to 1 if shots have been fired
+    fired = 0  # Turns to 1 if shots have been fired
     asteroidRate = 50
-    shotSpeed = 5
     textList = {}
     text, frameRate = '', ''
-    numberOfAsteroids = 5  # Number of asteroids per second
-    lives = 3
-    died = False
+    numberOfAsteroids = 1  # Number of asteroids per second
     s_time = time.time()
     startTime = time.time()
     player = Player()
@@ -556,7 +556,7 @@ def main():  # A bit messy try clean up
         fpsClock.tick(fps)  # Same as time.sleep(1/fps) I think
         pressed = pygame.key.get_pressed()
         if 1 in pressed:
-            keyboard()
+            keyboard(pressed)
         e_time = time.time()
         if e_time-s_time > 1:  # Is true when one seconds has passed
             timeCount += 1
@@ -578,9 +578,7 @@ def main():  # A bit messy try clean up
 if __name__ == '__main__':
     # Missile(0, 0, player)
     main()
-
-
-    # profile.run('start()')    #or main()
+    #profile.run('main()')    #or main()
 
 # scaled = pygame.transform.scale(sol, (20, 20))
 # rotated = pygame.transform.rotate(scaled, degrees)
