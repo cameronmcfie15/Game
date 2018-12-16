@@ -31,24 +31,6 @@ colourDict = {'white': (255, 255, 255), 'brown': (160, 82, 45), 'black': (0, 0, 
 bg = pygame.image.load('Images/background1.png')  # Loads in the background image
 heart = pygame.image.load('Images/Heart.png')
 pygame.Surface.convert(bg)  # Don't have to do this. but meant to
-#  Some of these Things that can be reset
-posMovement = 0.00001
-shotSpeed = 5
-planetList, satList, missileList, shotList, asteroidList = [], [], [], [], []
-textList = {}
-text = ''
-cash = 0
-shieldHealth = 0
-numberOfPlanets = 0
-numberOfAsteroids = 0
-asteroidRate = 50  # cant be Zero, bigger the number the slower the spawn rate
-SIZE = 100, 100
-fired = 0  # Turns to 1 if shots have been fired
-lives = 3
-score = 0
-timeCount = 0
-frameRate = ''
-frames, actualFps, count, degrees = 0, 0, 0, 0
 # Constants
 Mass = 4*10**13  # Mass of Centre   5.972*10**24
 G = 6.67*10**-11  # Gravity Constant    6.67*10**-11
@@ -524,6 +506,7 @@ def randPlanets():
         print(count)
 
 def randAsteroids():
+    global timeCount
     global numberOfAsteroids
     global asteroidRate
     if timeCount % asteroidRate == 0:
@@ -542,12 +525,13 @@ def menu():
 
 
 def main():  # A bit messy try clean up
-    global center, totFrames, timeCount, frameRate, shotSpeed, textList, cash, numberOfAsteroids
+    global center, totFrames, timeCount, frameRate, shotSpeed, textList, cash, numberOfAsteroids, player
     global planetList, satList, missileList, shotList, asteroidList, shieldHealth, lives, score, timeCount, frameRate
-    global frames, actualFps, count, degrees, fired, text, pressed, randColour, startTime, died
+    global frames, actualFps, count, degrees, fired, text, pressed, randColour, startTime, died, asteroidRate
     frames, actualFps, count, degrees, score, timeCount, totFrames, frames, cash = 0, 0, 0, 0, 0, 0, 0, 0, 0
     planetList, satList, missileList, shotList, asteroidList = [], [], [], [], []
     shieldHealth, fired = 0, 0  # Turns to 1 if shots have been fired
+    asteroidRate = 50
     shotSpeed = 5
     textList = {}
     text, frameRate = '', ''
@@ -556,6 +540,9 @@ def main():  # A bit messy try clean up
     died = False
     s_time = time.time()
     startTime = time.time()
+    player = Player()
+    randAsteroids()
+
 
 
 
@@ -589,10 +576,7 @@ def main():  # A bit messy try clean up
                 main()
 
 if __name__ == '__main__':
-    player = Player()
     # Missile(0, 0, player)
-    randAsteroids()
-
     main()
 
 
