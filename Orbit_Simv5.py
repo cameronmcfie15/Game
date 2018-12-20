@@ -8,11 +8,11 @@ Use google sheets for high scores
 Add shields, gravity well, difficulty (rate of aster spawns, lives)
 """
 
-import pygame, sys, random, math, time, threading, trace, itertools, profile, os, platform
+import pygame, sys, random, math, time, threading, trace, itertools, profile, os
 import numpy as np
 from win32api import GetSystemMetrics
 
-print(platform.platform())
+print(sys.platform)
 # --Setup--
 # Declaring / Assigning Variable
 pygame.init()  # Inizialises all of pygame
