@@ -8,11 +8,11 @@ Use google sheets for high scores
 Add shields, gravity well, difficulty (rate of aster spawns, lives)
 """
 
-import pygame, sys, random, math, time, threading, trace, itertools, profile, os
+import pygame, sys, random, math, time, threading, trace, itertools, profile, os, platform
 import numpy as np
 from win32api import GetSystemMetrics
 
-
+print(platform.platform())
 # --Setup--
 # Declaring / Assigning Variable
 pygame.init()  # Inizialises all of pygame
@@ -558,9 +558,6 @@ class Button:
         pygame.draw.rect(screen, colourDict['white'], (self.xPos, self.yPos, self.width, self.height), 1)
         screen.blit(font.render(self.text, True, (colourDict['white'])), (self.w, self.h))
 
-    def __del__(self):
-        buttonList.remove(self)
-
 
 def menu():
     Button("Testing", width/2 , height/2, 200, 100)
@@ -602,8 +599,6 @@ def main():  # A bit messy try clean up
             keyboard(pressed)
         e_time = time.time()
         if e_time-s_time > 1:  # Is true when one seconds has passed
-            for b in buttonList:
-                b.__del__()
             timeCount += 1
             print(text)
             s_time = time.time()
