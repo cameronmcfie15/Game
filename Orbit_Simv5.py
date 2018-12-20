@@ -431,6 +431,10 @@ class Alien:
         pass
 
 
+class Menu:
+    def __init__(self):
+        pass
+
 def keyboard(pressed):
     if pressed[pygame.K_5]:
         pass
@@ -476,6 +480,8 @@ def hud():
 
 
 def updater():  # print(len(planetList))
+    for button in buttonList:
+        button.update()
     for planet in planetList:
         planet.update()
     for sat in satList:
@@ -532,17 +538,44 @@ def change():
     # When divisible by 2
 
 
+class Button:
+    def __init__(self, text, x_pos, y_pos, button_width, button_height):
+        self.xPos = x_pos
+        self.yPos = y_pos
+        self.width = button_width
+        self.height = button_height
+        self.font = pygame.font.SysFont('Verdana', 18)
+        self.mouse = pygame.mouse.get_pos()
+        self.text = text
+        buttonList.append(self)  # x, y, width, height
+        self.text_width, self.text_height = self.font.size(self.text)
+        self.w = self.xPos+(self.width-self.text_width)/2
+        self.h = self.yPos+(self.height - self.text_height) / 2
+        pygame.draw.rect(screen, colourDict['white'], (self.xPos, self.yPos, self.width, self.height),1)
+        screen.blit(font.render(text, True, (colourDict['white'])), (width/2, height/2))
+
+    def update(self):
+        pygame.draw.rect(screen, colourDict['white'], (self.xPos, self.yPos, self.width, self.height), 1)
+        screen.blit(font.render(self.text, True, (colourDict['white'])), (self.w, self.h))
+
+    def __del__(self):
+        buttonList.remove(self)
+
+
 def menu():
+    Button("Testing", width/2 , height/2, 200, 100)
+    #mouse = pygame.mouse.set_pos()
+
     pass
 
 
 def main():  # A bit messy try clean up
     global center, totFrames, timeCount, frameRate, textList, numberOfAsteroids, player
-    global planetList, satList, missileList, shotList, asteroidList, frameRate
+    global planetList, satList, missileList, shotList, asteroidList, frameRate, buttonList
     global frames, actualFps, count, degrees, fired, text, randColour, startTime, asteroidRate
 
     frames, actualFps, count, degrees, score, timeCount, totFrames, frames, cash = 0, 0, 0, 0, 0, 0, 0, 0, 0
-    planetList, satList, missileList, shotList, asteroidList = [], [], [], [], []
+    planetList, satList, missileList, shotList, asteroidList, buttonList = [], [], [], [], [], []
     fired = 0  # Turns to 1 if shots have been fired
     asteroidRate = 50
     textList = {}
@@ -569,6 +602,8 @@ def main():  # A bit messy try clean up
             keyboard(pressed)
         e_time = time.time()
         if e_time-s_time > 1:  # Is true when one seconds has passed
+            for b in buttonList:
+                b.__del__()
             timeCount += 1
             print(text)
             s_time = time.time()
@@ -584,6 +619,7 @@ def main():  # A bit messy try clean up
                 died = False
                 player.deathTime = 0
                 main()
+        menu()
 
 if __name__ == '__main__':
     # Missile(0, 0, player)
