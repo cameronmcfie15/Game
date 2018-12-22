@@ -433,6 +433,7 @@ class Menu:
     def __init__(self):
         pass
 
+
 def keyboard(pressed):
     if pressed[pygame.K_5]:
         pass
@@ -561,7 +562,7 @@ class Button:
     def check(self):
         if self.xPos < self.mouse[0] < int(self.xPos+self.width) and self.yPos < self.mouse[1] < int(self.yPos+self.height):
             print(self.text)
-
+    # Also got check if mouse is clicked and only LMB
 
 
 def menu():
@@ -569,9 +570,6 @@ def menu():
     livesButton = Button("Buy Lives", width / 2, height / 4 + 50, 250, 50)
     shieldButton = Button("Buy Shields", width / 2, height / 4 + 100, 250, 50)
     shotSpeedButton = Button("Buy Faster Shot Speed", width / 2, height / 4 + 150, 250, 50)
-    #mouse = pygame.mouse.set_pos()
-
-    pass
 
 
 def main():  # A bit messy try clean up
@@ -590,9 +588,6 @@ def main():  # A bit messy try clean up
     player = Player()
     randAsteroids()
     menu()
-
-
-
 
     while True:  # main game loop
         screen.fill(colourDict['black'])
