@@ -390,9 +390,7 @@ class Shot(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         shotList.append(self)
         self.sound()
-        global fired
         self.angle, self.xPos, self.yPos = player.angle, player.xPos, player.yPos
-        fired = 1
         self.xVel = math.sin(self.angle) * player.shotSpeed
         self.yVel = math.cos(self.angle) * player.shotSpeed
         self.distance = 0
@@ -491,9 +489,11 @@ def updater():  # print(len(planetList))
     for asteroid in asteroidList:
         asteroid.update()
     player.update()
-    if fired == 1:
+    try:
         for shot in shotList:
             shot.update()
+    except:
+        pass
 
 
 def eventHandler():
@@ -540,8 +540,8 @@ def change():
 
 class Button:
     def __init__(self, text, x_pos, y_pos, button_width, button_height):
-        self.xPos = x_pos
-        self.yPos = y_pos
+        self.xPos = x_pos - (button_width/2)  # Top left corner of x, y posistions for rect
+        self.yPos = y_pos - (button_height/2)
         self.width = button_width
         self.height = button_height
         self.font = pygame.font.SysFont('Verdana', 18)
@@ -549,18 +549,26 @@ class Button:
         self.text = text
         buttonList.append(self)  # x, y, width, height
         self.text_width, self.text_height = self.font.size(self.text)
-        self.w = self.xPos+(self.width-self.text_width)/2
+        self.w = self.xPos+(self.width-self.text_width)/2  # x, y  coordinates for text
         self.h = self.yPos+(self.height - self.text_height) / 2
-        pygame.draw.rect(screen, colourDict['white'], (self.xPos, self.yPos, self.width, self.height),1)
-        screen.blit(font.render(text, True, (colourDict['white'])), (width/2, height/2))
 
     def update(self):
         pygame.draw.rect(screen, colourDict['white'], (self.xPos, self.yPos, self.width, self.height), 1)
-        screen.blit(font.render(self.text, True, (colourDict['white'])), (self.w, self.h))
+        screen.blit(font.render(self.text, False, (colourDict['white'])), (self.w, self.h))
+        self.mouse = pygame.mouse.get_pos()
+        self.check()
+
+    def check(self):
+        if self.xPos < self.mouse[0] < int(self.xPos+self.width) and self.yPos < self.mouse[1] < int(self.yPos+self.height):
+            print(self.text)
+
 
 
 def menu():
-    Button("Testing", width/2 , height/2, 200, 100)
+    menuButton = Button("Menu", width/2, height/4, 250, 50)
+    livesButton = Button("Buy Lives", width / 2, height / 4 + 50, 250, 50)
+    shieldButton = Button("Buy Shields", width / 2, height / 4 + 100, 250, 50)
+    shotSpeedButton = Button("Buy Faster Shot Speed", width / 2, height / 4 + 150, 250, 50)
     #mouse = pygame.mouse.set_pos()
 
     pass
@@ -569,11 +577,10 @@ def menu():
 def main():  # A bit messy try clean up
     global center, totFrames, timeCount, frameRate, textList, numberOfAsteroids, player
     global planetList, satList, missileList, shotList, asteroidList, frameRate, buttonList
-    global frames, actualFps, count, degrees, fired, text, randColour, startTime, asteroidRate
+    global frames, actualFps, count, degrees, text, randColour, startTime, asteroidRate
 
     frames, actualFps, count, degrees, score, timeCount, totFrames, frames, cash = 0, 0, 0, 0, 0, 0, 0, 0, 0
     planetList, satList, missileList, shotList, asteroidList, buttonList = [], [], [], [], [], []
-    fired = 0  # Turns to 1 if shots have been fired
     asteroidRate = 50
     textList = {}
     text, frameRate = '', ''
@@ -582,6 +589,7 @@ def main():  # A bit messy try clean up
     startTime = time.time()
     player = Player()
     randAsteroids()
+    menu()
 
 
 
@@ -614,7 +622,6 @@ def main():  # A bit messy try clean up
                 died = False
                 player.deathTime = 0
                 main()
-        menu()
 
 if __name__ == '__main__':
     # Missile(0, 0, player)
