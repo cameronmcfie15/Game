@@ -41,13 +41,13 @@ heart = pygame.transform.scale(heart, (12, 12))
 # --All the functions --
 
 
-def timeTaken():  # Function that calculates framerate of the application and wrights it to text file
+def time_taken():  # Function that calculates framerate of the application and wrights it to text file
     global totFrames
     endTime = time.time()
     file = open("times.txt","a")
-    timeTaken = float(endTime-startTime)
-    info = "This script took "+str(timeTaken)+" seconds"+" and had an average framerate of "+str(totFrames/timeTaken)
-    print(totFrames, (totFrames/timeTaken))
+    time_taken = float(endTime-startTime)
+    info = "This script took "+str(time_taken)+" seconds"+" and had an average framerate of "+str(totFrames/time_taken)
+    print(totFrames, (totFrames/time_taken))
     file.write(info+"\n")
     file.close()
 
@@ -134,7 +134,6 @@ class Player(pygame.sprite.Sprite):
         if self.cash >= 5:
             self.shield += 1
             self.cash -= 5
-
 
 
 class Asteroids(pygame.sprite.Sprite):
@@ -424,11 +423,6 @@ class Alien:
         pass
 
 
-class Menu:
-    def __init__(self):
-        pass
-
-
 class Button:
     def __init__(self, text, x_pos, y_pos, button_width, button_height):
         self.xPos = x_pos - (button_width/2)  # Top left corner of x, y posistions for rect
@@ -457,7 +451,6 @@ class Button:
 
 
 def keyboard(pressed):
-    global bPressed
     if pressed[pygame.K_5]:
         pass
 
@@ -498,7 +491,7 @@ def hud():
 
 
 def updater():  # print(len(planetList))
-    if exitButton.pressed == True:
+    if exitButton.pressed:
         for button in buttonList:
             button.update()
     for planet in planetList:
@@ -513,14 +506,14 @@ def updater():  # print(len(planetList))
     try:
         for shot in shotList:
             shot.update()
-    except:
+    finally:
         pass
 
 
-def eventHandler():
+def event_handler():
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            timeTaken()
+            time_taken()
             sys.exit()
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse = pygame.mouse.get_pressed()
@@ -531,8 +524,7 @@ def eventHandler():
                 exitButton.pressed = True
 
 
-
-def randPlanets():
+def rand_planets():
     count = 0
     for i in range(0, numberOfPlanets):
         count += 1
@@ -548,7 +540,7 @@ def randPlanets():
         print(count)
 
 
-def randAsteroids():
+def rand_Asteroids():
     global timeCount
     global numberOfAsteroids
     global asteroidRate
@@ -572,7 +564,6 @@ def menu(button):
             button.pressed = False
 
 
-
 def main():  # A bit messy try clean up
     global center, totFrames, timeCount, frameRate, textList, numberOfAsteroids, player
     global planetList, satList, missileList, shotList, asteroidList, frameRate
@@ -585,10 +576,7 @@ def main():  # A bit messy try clean up
     s_time = time.time()
     startTime = time.time()
     player = Player()
-    randAsteroids()
-
-
-
+    rand_Asteroids()
 
 
     while True:  # main game loop
@@ -596,7 +584,7 @@ def main():  # A bit messy try clean up
         hud()
         # randColour = list(np.random.choice(range(256), size=3))
         updater()
-        eventHandler()
+        event_handler()
         pygame.display.update()
         fpsClock.tick(fps)  # Same as time.sleep(1/fps) I think
         pressed = pygame.key.get_pressed()
@@ -608,13 +596,11 @@ def main():  # A bit messy try clean up
             s_time = time.time()
             frameRate = str(frames)
             frames = 0
-            randAsteroids()
+            rand_Asteroids()
 
-        screen.blit(font.render(text, True, (colourDict['white'])), (32, 48))
         frames += 1
         if player.deathTime != 0:
             if timeCount - player.deathTime > 5:
-                died = False
                 player.deathTime = 0
                 main()
 
