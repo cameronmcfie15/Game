@@ -444,6 +444,7 @@ class Button:
         self.font = pygame.font.SysFont('Verdana', 18)
         self.mouse = pygame.mouse.get_pos()
         self.text = text
+        self.pressed = False
         buttonList.append(self)  # x, y, width, height
         self.text_width, self.text_height = self.font.size(self.text)
         self.w = self.xPos+(self.width-self.text_width)/2  # x, y  coordinates for text
@@ -503,8 +504,7 @@ def hud():
 
 
 def updater():  # print(len(planetList))
-    global bPressed
-    if bPressed:
+    if exitButton.pressed == True:
         for button in buttonList:
             button.update()
     for planet in planetList:
@@ -524,7 +524,6 @@ def updater():  # print(len(planetList))
 
 
 def eventHandler():
-    global bPressed
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             timeTaken()
@@ -535,15 +534,8 @@ def eventHandler():
                 Shot()
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_b:
-                bPressed = True
-        if event.type == pygame.KEYUP:
-            if event.key == pygame.K_b:
-                try:
-                    print(exitButton.check())
-                    if exitButton.check():
-                        bPressed = False
-                except:
-                    pass
+                exitButton.pressed = True
+
 
 
 def randPlanets():
@@ -581,18 +573,20 @@ def change():
 
 def menu(button):
     if button == exitButton:
-        bPressed = False
+        mouse = pygame.mouse.get_pressed()
+        if mouse[0] == 1:
+            button.pressed = False
 
 
 
 def main():  # A bit messy try clean up
     global center, totFrames, timeCount, frameRate, textList, numberOfAsteroids, player
-    global planetList, satList, missileList, shotList, asteroidList, frameRate, buttonList
+    global planetList, satList, missileList, shotList, asteroidList, frameRate
     global frames, actualFps, count, degrees, text, randColour, startTime, asteroidRate, b, bPressed
     global menuButton, livesButton, shieldButton, shotSpeedButton, exitButton
     bPressed = False
     frames, actualFps, count, degrees, score, timeCount, totFrames, frames, cash = 0, 0, 0, 0, 0, 0, 0, 0, 0
-    planetList, satList, missileList, shotList, asteroidList, buttonList = [], [], [], [], [], []
+    planetList, satList, missileList, shotList, asteroidList = [], [], [], [], []
     asteroidRate = 50
     textList = {}
     text, frameRate = '', ''
@@ -626,8 +620,7 @@ def main():  # A bit messy try clean up
         if e_time-s_time > 1:  # Is true when one seconds has passed
             timeCount += 1
             s_time = time.time()
-            text = str(frames)
-            frameRate = text
+            frameRate = str(frames)
             frames = 0
             randAsteroids()
 
@@ -639,7 +632,12 @@ def main():  # A bit messy try clean up
                 player.deathTime = 0
                 main()
 
-
+buttonList = []
+menuButton = Button("Menu", width/2, height/5, 250, 50)
+livesButton = Button("Buy Lives", width / 2, height / 5 + 50, 250, 50)
+shieldButton = Button("Buy Shields", width / 2, height / 5 + 100, 250, 50)
+shotSpeedButton = Button("Buy Faster Shot Speed", width / 2, height / 5 + 150, 250, 50)
+exitButton = Button("Exit", width / 2, height / 5 + 200, 250, 50)
 
 if __name__ == '__main__':
     # Missile(0, 0, player)
