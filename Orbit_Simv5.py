@@ -129,10 +129,11 @@ class Player(pygame.sprite.Sprite):
         self.cash = 0
         #sys.exit()
 
-    def buyMenu(self):
+    def buyMenu(self, pressed):
         if self.cash >= 5:
             self.shield += 1
             self.cash -= 5
+
 
 
 class Asteroids(pygame.sprite.Sprite):
@@ -434,12 +435,35 @@ class Menu:
         pass
 
 
-def keyboard(pressed):
-    if pressed[pygame.K_5]:
-        pass
+class Button:
+    def __init__(self, text, x_pos, y_pos, button_width, button_height):
+        self.xPos = x_pos - (button_width/2)  # Top left corner of x, y posistions for rect
+        self.yPos = y_pos - (button_height/2)
+        self.width = button_width
+        self.height = button_height
+        self.font = pygame.font.SysFont('Verdana', 18)
+        self.mouse = pygame.mouse.get_pos()
+        self.text = text
+        buttonList.append(self)  # x, y, width, height
+        self.text_width, self.text_height = self.font.size(self.text)
+        self.w = self.xPos+(self.width-self.text_width)/2  # x, y  coordinates for text
+        self.h = self.yPos+(self.height - self.text_height) / 2
 
-    if pressed[pygame.K_b]:
-        player.buyMenu()
+    def update(self):
+        pygame.draw.rect(screen, colourDict['white'], (self.xPos, self.yPos, self.width, self.height), 1)
+        screen.blit(font.render(self.text, False, (colourDict['white'])), (self.w, self.h))
+        self.mouse = pygame.mouse.get_pos()
+        self.check()
+
+    def check(self):
+        if self.xPos < self.mouse[0] < int(self.xPos+self.width) and self.yPos < self.mouse[1] < int(self.yPos+self.height):
+            menu(self)
+    # Also got check if mouse is clicked and only LMB
+
+
+def keyboard(pressed):
+    global bPressed
+    if pressed[pygame.K_5]:
         pass
 
     if pressed[pygame.K_3]:
@@ -479,8 +503,10 @@ def hud():
 
 
 def updater():  # print(len(planetList))
-    for button in buttonList:
-        button.update()
+    global bPressed
+    if bPressed:
+        for button in buttonList:
+            button.update()
     for planet in planetList:
         planet.update()
     for sat in satList:
@@ -498,12 +524,26 @@ def updater():  # print(len(planetList))
 
 
 def eventHandler():
+    global bPressed
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             timeTaken()
             sys.exit()
         if event.type == pygame.MOUSEBUTTONDOWN:
-            Shot()
+            mouse = pygame.mouse.get_pressed()
+            if mouse[0] == 1:
+                Shot()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_b:
+                bPressed = True
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_b:
+                try:
+                    print(exitButton.check())
+                    if exitButton.check():
+                        bPressed = False
+                except:
+                    pass
 
 
 def randPlanets():
@@ -539,44 +579,18 @@ def change():
     # When divisible by 2
 
 
-class Button:
-    def __init__(self, text, x_pos, y_pos, button_width, button_height):
-        self.xPos = x_pos - (button_width/2)  # Top left corner of x, y posistions for rect
-        self.yPos = y_pos - (button_height/2)
-        self.width = button_width
-        self.height = button_height
-        self.font = pygame.font.SysFont('Verdana', 18)
-        self.mouse = pygame.mouse.get_pos()
-        self.text = text
-        buttonList.append(self)  # x, y, width, height
-        self.text_width, self.text_height = self.font.size(self.text)
-        self.w = self.xPos+(self.width-self.text_width)/2  # x, y  coordinates for text
-        self.h = self.yPos+(self.height - self.text_height) / 2
+def menu(button):
+    if button == exitButton:
+        bPressed = False
 
-    def update(self):
-        pygame.draw.rect(screen, colourDict['white'], (self.xPos, self.yPos, self.width, self.height), 1)
-        screen.blit(font.render(self.text, False, (colourDict['white'])), (self.w, self.h))
-        self.mouse = pygame.mouse.get_pos()
-        self.check()
-
-    def check(self):
-        if self.xPos < self.mouse[0] < int(self.xPos+self.width) and self.yPos < self.mouse[1] < int(self.yPos+self.height):
-            print(self.text)
-    # Also got check if mouse is clicked and only LMB
-
-
-def menu():
-    menuButton = Button("Menu", width/2, height/4, 250, 50)
-    livesButton = Button("Buy Lives", width / 2, height / 4 + 50, 250, 50)
-    shieldButton = Button("Buy Shields", width / 2, height / 4 + 100, 250, 50)
-    shotSpeedButton = Button("Buy Faster Shot Speed", width / 2, height / 4 + 150, 250, 50)
 
 
 def main():  # A bit messy try clean up
     global center, totFrames, timeCount, frameRate, textList, numberOfAsteroids, player
     global planetList, satList, missileList, shotList, asteroidList, frameRate, buttonList
-    global frames, actualFps, count, degrees, text, randColour, startTime, asteroidRate
-
+    global frames, actualFps, count, degrees, text, randColour, startTime, asteroidRate, b, bPressed
+    global menuButton, livesButton, shieldButton, shotSpeedButton, exitButton
+    bPressed = False
     frames, actualFps, count, degrees, score, timeCount, totFrames, frames, cash = 0, 0, 0, 0, 0, 0, 0, 0, 0
     planetList, satList, missileList, shotList, asteroidList, buttonList = [], [], [], [], [], []
     asteroidRate = 50
@@ -587,7 +601,14 @@ def main():  # A bit messy try clean up
     startTime = time.time()
     player = Player()
     randAsteroids()
-    menu()
+    menuButton = Button("Menu", width/2, height/5, 250, 50)
+    livesButton = Button("Buy Lives", width / 2, height / 5 + 50, 250, 50)
+    shieldButton = Button("Buy Shields", width / 2, height / 5 + 100, 250, 50)
+    shotSpeedButton = Button("Buy Faster Shot Speed", width / 2, height / 5 + 150, 250, 50)
+    exitButton = Button("Exit", width / 2, height / 5 + 200, 250, 50)
+
+
+
 
     while True:  # main game loop
         screen.fill(colourDict['black'])
@@ -600,10 +621,10 @@ def main():  # A bit messy try clean up
         pressed = pygame.key.get_pressed()
         if 1 in pressed:
             keyboard(pressed)
+            b = pressed
         e_time = time.time()
         if e_time-s_time > 1:  # Is true when one seconds has passed
             timeCount += 1
-            print(text)
             s_time = time.time()
             text = str(frames)
             frameRate = text
@@ -617,6 +638,8 @@ def main():  # A bit messy try clean up
                 died = False
                 player.deathTime = 0
                 main()
+
+
 
 if __name__ == '__main__':
     # Missile(0, 0, player)
