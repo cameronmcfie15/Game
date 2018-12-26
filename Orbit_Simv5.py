@@ -632,6 +632,7 @@ def main():  # A bit messy try clean up
                 player.deathTime = 0
                 main()
 
+
 buttonList = []
 menuButton = Button("Menu", width/2, height/5, 250, 50)
 livesButton = Button("Buy Lives", width / 2, height / 5 + 50, 250, 50)
