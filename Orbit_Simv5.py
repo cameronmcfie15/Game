@@ -31,6 +31,7 @@ colourDict = {'white': (255, 255, 255), 'brown': (160, 82, 45), 'black': (0, 0, 
 bg = pygame.image.load('Images/background1.png')  # Loads in the background image
 heart = pygame.image.load('Images/Heart.png')
 pygame.Surface.convert(bg)  # Don't have to do this. but meant to
+asteroidRate = 50  # bigger = slower
 # Constants
 Mass = 4*10**13  # Mass of Centre   5.972*10**24
 G = 6.67*10**-11  # Gravity Constant    6.67*10**-11
@@ -413,13 +414,6 @@ class Shot(pygame.sprite.Sprite):
         self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
         if self.distance > 1000:
             self.death()
-        #self.collisions()
-
-    # def collisions(self):
-    #     for aster in asteroidList:
-    #         if pygame.sprite.collide_circle(self, aster):
-    #             self.death()
-    #             aster.death()
 
     def death(self):
         shotList.remove(self)
@@ -582,12 +576,9 @@ def menu(button):
 def main():  # A bit messy try clean up
     global center, totFrames, timeCount, frameRate, textList, numberOfAsteroids, player
     global planetList, satList, missileList, shotList, asteroidList, frameRate
-    global frames, actualFps, count, degrees, text, randColour, startTime, asteroidRate, b, bPressed
-    global menuButton, livesButton, shieldButton, shotSpeedButton, exitButton
-    bPressed = False
+    global frames, actualFps, count, startTime
     frames, actualFps, count, degrees, score, timeCount, totFrames, frames, cash = 0, 0, 0, 0, 0, 0, 0, 0, 0
     planetList, satList, missileList, shotList, asteroidList = [], [], [], [], []
-    asteroidRate = 50
     textList = {}
     text, frameRate = '', ''
     numberOfAsteroids = 1  # Number of asteroids per second
@@ -595,11 +586,7 @@ def main():  # A bit messy try clean up
     startTime = time.time()
     player = Player()
     randAsteroids()
-    menuButton = Button("Menu", width/2, height/5, 250, 50)
-    livesButton = Button("Buy Lives", width / 2, height / 5 + 50, 250, 50)
-    shieldButton = Button("Buy Shields", width / 2, height / 5 + 100, 250, 50)
-    shotSpeedButton = Button("Buy Faster Shot Speed", width / 2, height / 5 + 150, 250, 50)
-    exitButton = Button("Exit", width / 2, height / 5 + 200, 250, 50)
+
 
 
 
@@ -607,7 +594,7 @@ def main():  # A bit messy try clean up
     while True:  # main game loop
         screen.fill(colourDict['black'])
         hud()
-        randColour = list(np.random.choice(range(256), size=3))
+        # randColour = list(np.random.choice(range(256), size=3))
         updater()
         eventHandler()
         pygame.display.update()
@@ -615,7 +602,6 @@ def main():  # A bit messy try clean up
         pressed = pygame.key.get_pressed()
         if 1 in pressed:
             keyboard(pressed)
-            b = pressed
         e_time = time.time()
         if e_time-s_time > 1:  # Is true when one seconds has passed
             timeCount += 1
