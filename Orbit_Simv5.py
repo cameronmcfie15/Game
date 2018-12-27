@@ -8,6 +8,7 @@ Use google sheets for high scores
 Add shields, gravity well, difficulty (rate of aster spawns, lives)
 """
 
+# Ctrl+Shift+NumPad -      To fold all
 import pygame, sys, random, math, time, threading, trace, itertools, profile, os
 import numpy as np
 from win32api import GetSystemMetrics
@@ -32,6 +33,7 @@ bg = pygame.image.load('Images/background1.png')  # Loads in the background imag
 heart = pygame.image.load('Images/Heart.png')
 pygame.Surface.convert(bg)  # Don't have to do this. but meant to
 asteroidRate = 50  # bigger = slower
+gravity = False
 # Constants
 Mass = 4*10**13  # Mass of Centre   5.972*10**24
 G = 6.67*10**-11  # Gravity Constant    6.67*10**-11
@@ -63,7 +65,7 @@ def volume(sound):
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.xPos, self.yPos = width/2, height/2
+        self.xPos, self.yPos = 200, 200
         self.xVel, self.yVel, self.xAcceleration, self.yAcceleration, self.force, self.angle = 0, 0, 0, 0, 0, 0
         self.decay = 0.98
         self.radius = 20
@@ -75,6 +77,9 @@ class Player(pygame.sprite.Sprite):
         self.lives = 3
         self.score = 0
         self.died = False
+        self.distance = 0
+        self.xA, self.yA, self.gForce = 0, 0, 0
+        self.xGrav, self.yGrav = 500, 500
         # self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
 
     def update(self):  # Is called every tick
@@ -105,14 +110,24 @@ class Player(pygame.sprite.Sprite):
         self.angle = list(pygame.mouse.get_pos())  # Calculating angle in rads of mouse from the player
         self.angle = [self.angle[0]-self.xPos,self.angle[1]-self.yPos]
         self.angle = (math.atan2(self.angle[0],self.angle[1]))
-        self.xAcceleration = math.sin(self.angle) * self.force  # Calculating forces and directions to update posistions
-        self.yAcceleration = math.cos(self.angle) * self.force
-        self.xVel += self.xAcceleration
-        self.yVel += self.yAcceleration
+        if gravity:
+            pygame.draw.circle(screen, colourDict['white'], (self.xGrav, self.yGrav), 5)
+            self.distance = abs(math.sqrt(((self.xPos - self.xGrav) ** 2) + ((self.yPos - self.yGrav) ** 2)))
+            self.gForce = 50 / self.distance ** 1.05  # V = GM/r
+        if self.distance < 200:
+            self.gForce = 0.3
+        if gravity:
+            self.xA = self.gForce * (self.xGrav - self.xPos) / self.distance
+            self.yA = self.gForce * (self.yGrav - self.yPos) / self.distance
+        self.xAcceleration = math.sin(self.angle) * self.force + self.xA
+        self.yAcceleration = math.cos(self.angle) * self.force + self.yA
         self.xVel *= self.decay
         self.yVel *= self.decay
+        self.xVel += self.xAcceleration
+        self.yVel += self.yAcceleration
         self.xPos += self.xVel
         self.yPos += self.yVel
+
 
     def hit(self):
         if self.shield >= 1:
@@ -129,11 +144,6 @@ class Player(pygame.sprite.Sprite):
         self.shotSpeed = 0
         self.cash = 0
         #sys.exit()
-
-    def buyMenu(self, pressed):
-        if self.cash >= 5:
-            self.shield += 1
-            self.cash -= 5
 
 
 class Asteroids(pygame.sprite.Sprite):
@@ -281,7 +291,7 @@ class Planet:
 
     def update(self):  # Is called every tick, from here a method is decided
         global center, v, posMovement
-        self.planet = pygame.draw.circle(screen, colourDict['brown'], (int(self.xPos), int(self.yPos)), 15)
+        self.planet = pygame.draw.circle(screen, colourDict['white'], (int(self.xPos), int(self.yPos)), 2)
         if self.xPos > 1000 or self.xPos < 0 or self.yPos > 1000 or self.yPos < 0:
             self.kill()
         elif self.distance > 9:
@@ -446,8 +456,10 @@ class Button:
 
     def check(self):
         if self.xPos < self.mouse[0] < int(self.xPos+self.width) and self.yPos < self.mouse[1] < int(self.yPos+self.height):
-            menu(self)
-    # Also got check if mouse is clicked and only LMB
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    menu(self)
+        # Also got check if mouse is clicked and only LMB
 
 
 def keyboard(pressed):
@@ -460,8 +472,9 @@ def keyboard(pressed):
     if pressed[pygame.K_2]:
         pass
 
-    if pressed[pygame.K_1]:
-        pass
+    if pressed[pygame.K_g]:
+        global gravity
+        gravity = True
 
     if pressed[pygame.K_SPACE]:
         player.force = 0.4
@@ -526,7 +539,7 @@ def event_handler():
 
 def rand_planets():
     count = 0
-    for i in range(0, numberOfPlanets):
+    for i in range(0, 1000):
         count += 1
         x = random.randint(1, 1000)
         y = random.randint(1, 1000)
@@ -558,16 +571,27 @@ def change():
 
 
 def menu(button):
-    if button == exitButton:
-        mouse = pygame.mouse.get_pressed()
-        if mouse[0] == 1:
+    mouse = pygame.mouse.get_pressed()
+    if mouse[0] == 1:
+        if button == exitButton:
             button.pressed = False
+        if button == livesButton and player.cash > 10:
+            player.lives += 1
+            player.cash -= 5
+        if button == shieldButton and player.cash > 10:
+            player.shield += 1
+            player.cash -= 5
+        if button == shotSpeedButton and player.cash > 10:
+            if player.shotSpeed < 30:
+                player.shotSpeed += 5
+                player.cash -= 5
+
 
 
 def main():  # A bit messy try clean up
     global center, totFrames, timeCount, frameRate, textList, numberOfAsteroids, player
     global planetList, satList, missileList, shotList, asteroidList, frameRate
-    global frames, actualFps, count, startTime
+    global frames, actualFps, count, startTime, gravity
     frames, actualFps, count, degrees, score, timeCount, totFrames, frames, cash = 0, 0, 0, 0, 0, 0, 0, 0, 0
     planetList, satList, missileList, shotList, asteroidList = [], [], [], [], []
     textList = {}
@@ -577,6 +601,8 @@ def main():  # A bit messy try clean up
     startTime = time.time()
     player = Player()
     rand_Asteroids()
+    #rand_planets()    Cool Effect
+    gravity = False
 
 
     while True:  # main game loop
@@ -606,11 +632,11 @@ def main():  # A bit messy try clean up
 
 
 buttonList = []
-menuButton = Button("Menu", width/2, height/5, 250, 50)
-livesButton = Button("Buy Lives", width / 2, height / 5 + 50, 250, 50)
-shieldButton = Button("Buy Shields", width / 2, height / 5 + 100, 250, 50)
-shotSpeedButton = Button("Buy Faster Shot Speed", width / 2, height / 5 + 150, 250, 50)
-exitButton = Button("Exit", width / 2, height / 5 + 200, 250, 50)
+menuButton = Button("Menu, Cost 10 Credits", width/2, (height/5), 250, 50)
+livesButton = Button("Buy Lives", width / 2, (height / 5) + 50, 250, 50)
+shieldButton = Button("Buy Shields", width / 2, (height / 5) + 100, 250, 50)
+shotSpeedButton = Button("Buy Faster Shot Speed", width / 2, (height / 5) + 150, 250, 50)
+exitButton = Button("Exit", width / 2, (height / 5) + 200, 250, 50)
 
 if __name__ == '__main__':
     # Missile(0, 0, player)
