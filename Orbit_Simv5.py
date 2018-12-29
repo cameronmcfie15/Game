@@ -115,13 +115,15 @@ class Player(pygame.sprite.Sprite):
         #self.front += 10 , 10
         self.left = self.front.rotate(-90)
         self.right = self.front.rotate(90)
-        self.trithrust = pygame.draw.circle(screen, colourDict['white'], list(map(int, self.pos + self.left)), 2)
-        self.trithrust = pygame.draw.circle(screen, colourDict['white'], list(map(int, self.pos + self.right)), 2)
-        self.trithrust = pygame.draw.circle(screen, colourDict['white'], list(map(int, self.pos + self.front)), 2)  # Middle
-        pygame.draw.line(screen, (0, 240, 50), self.pos, self.pos + self.front, 2)
-        pygame.draw.line(screen, (240, 0, 50), self.pos, self.pos + self.left, 2)
-        pygame.draw.line(screen, (240, 240, 0), self.pos, self.pos + self.right, 2)
-        self.thrust = pygame.draw.polygon(screen, colourDict['white'], ((self.pos + self.left),(self.pos + self.right),(self.pos + self.front)), 2)
+        # self.trithrust = pygame.draw.circle(screen, colourDict['white'], list(map(int, self.pos + self.left)), 2)
+        # self.trithrust = pygame.draw.circle(screen, colourDict['white'], list(map(int, self.pos + self.right)), 2)
+        # self.trithrust = pygame.draw.circle(screen, colourDict['white'], list(map(int, self.pos + self.front)), 2)  # Middle
+        # pygame.draw.line(screen, (0, 240, 50), self.pos, self.pos + self.front, 2)
+        # pygame.draw.line(screen, (240, 0, 50), self.pos, self.pos + self.left, 2)
+        # pygame.draw.line(screen, (240, 240, 0), self.pos, self.pos + self.right, 2)
+        pygame.draw.line(screen, (240, 0, 50), (self.pos + self.front), (self.pos + self.left), 2)
+        pygame.draw.line(screen, (240, 240, 0), (self.pos + self.front), (self.pos + self.right), 2)
+        #self.thrust = pygame.draw.polygon(screen, colourDict['white'], ((self.pos + self.left),(self.pos + self.right),(self.pos + self.front)), 2)
 
     def posistionUpdate(self):
         self.angle = list(pygame.mouse.get_pos())  # Calculating angle in rads of mouse from the player
