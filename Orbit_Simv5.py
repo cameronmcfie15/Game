@@ -81,6 +81,7 @@ class Player(pygame.sprite.Sprite):
         self.distance = 0
         self.xA, self.yA, self.gForce = 0, 0, 0
         self.xGrav, self.yGrav = 500, 500
+        self.force = 0
         # self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
 
     def update(self):  # Is called every tick
@@ -107,23 +108,23 @@ class Player(pygame.sprite.Sprite):
         self.triangle = [(self.x[0], self.y[0]), (self.x[1], self.y[1]), (self.x[2], self.y[2])]  # X, Y Pos List
         self.triangle = pygame.draw.polygon(screen, colourDict['white'], self.triangle, 2)  # Draws the ship
         # self.triThrust = [(self.x[1], self.y[1]), (self.x[2], self.y[2]), (500, 500)]   cool effect
-
-        self.pos = pygame.math.Vector2(int(self.xPos-13 * math.sin(self.angle)), int(self.yPos-13 * math.cos(self.angle)))
-        print((self.pos))
-        self.front = pygame.math.Vector2(0, -self.radius/2)
-        self.front.rotate_ip(math.degrees(-self.angle))
-        #self.front += 10 , 10
-        self.left = self.front.rotate(-90)
-        self.right = self.front.rotate(90)
-        # self.trithrust = pygame.draw.circle(screen, colourDict['white'], list(map(int, self.pos + self.left)), 2)
-        # self.trithrust = pygame.draw.circle(screen, colourDict['white'], list(map(int, self.pos + self.right)), 2)
-        # self.trithrust = pygame.draw.circle(screen, colourDict['white'], list(map(int, self.pos + self.front)), 2)  # Middle
-        # pygame.draw.line(screen, (0, 240, 50), self.pos, self.pos + self.front, 2)
-        # pygame.draw.line(screen, (240, 0, 50), self.pos, self.pos + self.left, 2)
-        # pygame.draw.line(screen, (240, 240, 0), self.pos, self.pos + self.right, 2)
-        pygame.draw.line(screen, (240, 0, 50), (self.pos + self.front), (self.pos + self.left), 2)
-        pygame.draw.line(screen, (240, 240, 0), (self.pos + self.front), (self.pos + self.right), 2)
-        #self.thrust = pygame.draw.polygon(screen, colourDict['white'], ((self.pos + self.left),(self.pos + self.right),(self.pos + self.front)), 2)
+        if self.force != 0:
+            self.pos = pygame.math.Vector2(int(self.xPos-15 * math.sin(self.angle)), int(self.yPos-15 * math.cos(self.angle)))
+            print((self.pos))
+            self.front = pygame.math.Vector2(0, -self.radius/2)
+            self.front.rotate_ip(math.degrees(-self.angle))
+            #self.front += 10 , 10
+            self.left = self.front.rotate(-90)
+            self.right = self.front.rotate(90)
+            # self.trithrust = pygame.draw.circle(screen, colourDict['white'], list(map(int, self.pos + self.left)), 2)
+            # self.trithrust = pygame.draw.circle(screen, colourDict['white'], list(map(int, self.pos + self.right)), 2)
+            # self.trithrust = pygame.draw.circle(screen, colourDict['white'], list(map(int, self.pos + self.front)), 2)  # Middle
+            # pygame.draw.line(screen, (0, 240, 50), self.pos, self.pos + self.front, 2)
+            # pygame.draw.line(screen, (240, 0, 50), self.pos, self.pos + self.left, 2)
+            # pygame.draw.line(screen, (240, 240, 0), self.pos, self.pos + self.right, 2)
+            pygame.draw.line(screen, colourDict['white'], (self.pos + self.front), (self.pos + self.left), 2)
+            pygame.draw.line(screen, colourDict['white'], (self.pos + self.front), (self.pos + self.right), 2)
+            #self.thrust = pygame.draw.polygon(screen, colourDict['white'], ((self.pos + self.left),(self.pos + self.right),(self.pos + self.front)), 2)
 
     def posistionUpdate(self):
         self.angle = list(pygame.mouse.get_pos())  # Calculating angle in rads of mouse from the player
@@ -674,3 +675,20 @@ if __name__ == '__main__':
                 result.blit(texture, (x, y))
         return result
 '''
+"""            self.pos = pygame.math.Vector2(int(self.xPos-15 * math.sin(self.angle)), int(self.yPos-15 * math.cos(self.angle)))
+            print((self.pos))
+            self.front = pygame.math.Vector2(0, -self.radius/2)
+            self.front.rotate_ip(math.degrees(-self.angle))
+            #self.front += 10 , 10
+            self.left = self.front.rotate(-90)
+            self.right = self.front.rotate(90)
+            # self.trithrust = pygame.draw.circle(screen, colourDict['white'], list(map(int, self.pos + self.left)), 2)
+            # self.trithrust = pygame.draw.circle(screen, colourDict['white'], list(map(int, self.pos + self.right)), 2)
+            # self.trithrust = pygame.draw.circle(screen, colourDict['white'], list(map(int, self.pos + self.front)), 2)  # Middle
+            # pygame.draw.line(screen, (0, 240, 50), self.pos, self.pos + self.front, 2)
+            # pygame.draw.line(screen, (240, 0, 50), self.pos, self.pos + self.left, 2)
+            # pygame.draw.line(screen, (240, 240, 0), self.pos, self.pos + self.right, 2)
+            pygame.draw.line(screen, colourDict['white'], (self.pos + self.front), (self.pos + self.left), 2)
+            pygame.draw.line(screen, colourDict['white'], (self.pos + self.front), (self.pos + self.right), 2)
+            #self.thrust = pygame.draw.polygon(screen, colourDict['white'], ((self.pos + self.left),(self.pos + self.right),(self.pos + self.front)), 2)
+"""
