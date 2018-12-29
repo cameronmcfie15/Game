@@ -6,6 +6,7 @@ Use better collisions
 need to define radius attribute somehow
 Use google sheets for high scores
 Add shields, gravity well, difficulty (rate of aster spawns, lives)
+Need to randomise gravity well, thrust animation
 """
 
 # Ctrl+Shift+NumPad -      To fold all
@@ -69,7 +70,7 @@ class Player(pygame.sprite.Sprite):
         self.xVel, self.yVel, self.xAcceleration, self.yAcceleration, self.force, self.angle = 0, 0, 0, 0, 0, 0
         self.decay = 0.98
         self.radius = 20
-        self.triangle, self.x, self.y, self.velVector = [], [], [], []
+        self.triangle, self.x, self.y, self.velVector, self.triThrust = [], [], [], [], []
         self.deathTime = 0
         self.cash = 0
         self.shotSpeed = 5
@@ -88,7 +89,7 @@ class Player(pygame.sprite.Sprite):
 
         self.updatePoly()
         self.posistionUpdate()
-        self.velVector = [math.atan2(self.xVel, self.yVel), math.sqrt(self.xVel**2+self.yVel**2)]  # Theta ,absolute
+        #self.velVector = [math.atan2(self.xVel, self.yVel), math.sqrt(self.xVel**2+self.yVel**2)]  # Theta ,absolute
         self.force = 0  # Resets force when button is not pushed down
         # self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
         # Above line and same for init  not needed at the moment but may be needed for other collisions
@@ -105,6 +106,22 @@ class Player(pygame.sprite.Sprite):
             self.y.append(self.yPos + self.radius * math.sin(t + -self.angle))   # Where the magic happens
         self.triangle = [(self.x[0], self.y[0]), (self.x[1], self.y[1]), (self.x[2], self.y[2])]  # X, Y Pos List
         self.triangle = pygame.draw.polygon(screen, colourDict['white'], self.triangle, 2)  # Draws the ship
+        # self.triThrust = [(self.x[1], self.y[1]), (self.x[2], self.y[2]), (500, 500)]   cool effect
+
+        self.pos = pygame.math.Vector2(int(self.xPos-13 * math.sin(self.angle)), int(self.yPos-13 * math.cos(self.angle)))
+        print((self.pos))
+        self.front = pygame.math.Vector2(0, -self.radius/2)
+        self.front.rotate_ip(math.degrees(-self.angle))
+        #self.front += 10 , 10
+        self.left = self.front.rotate(-90)
+        self.right = self.front.rotate(90)
+        self.trithrust = pygame.draw.circle(screen, colourDict['white'], list(map(int, self.pos + self.left)), 2)
+        self.trithrust = pygame.draw.circle(screen, colourDict['white'], list(map(int, self.pos + self.right)), 2)
+        self.trithrust = pygame.draw.circle(screen, colourDict['white'], list(map(int, self.pos + self.front)), 2)  # Middle
+        pygame.draw.line(screen, (0, 240, 50), self.pos, self.pos + self.front, 2)
+        pygame.draw.line(screen, (240, 0, 50), self.pos, self.pos + self.left, 2)
+        pygame.draw.line(screen, (240, 240, 0), self.pos, self.pos + self.right, 2)
+        self.thrust = pygame.draw.polygon(screen, colourDict['white'], ((self.pos + self.left),(self.pos + self.right),(self.pos + self.front)), 2)
 
     def posistionUpdate(self):
         self.angle = list(pygame.mouse.get_pos())  # Calculating angle in rads of mouse from the player
@@ -127,7 +144,6 @@ class Player(pygame.sprite.Sprite):
         self.yVel += self.yAcceleration
         self.xPos += self.xVel
         self.yPos += self.yVel
-
 
     def hit(self):
         if self.shield >= 1:
