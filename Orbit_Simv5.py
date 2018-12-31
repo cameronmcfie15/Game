@@ -3,10 +3,10 @@
 TO DO:
 Rotate using surface for sprites 
 Use better collisions
-need to define radius attribute somehow
 Use google sheets for high scores
-Add shields, gravity well, difficulty (rate of aster spawns, lives)
-Need to randomise gravity well, thrust animation
+Add difficulty (rate of aster spawns, lives)
+Need to randomise gravity well,
+Change pos, vels etc to vectors
 """
 
 # Ctrl+Shift+NumPad -      To fold all
@@ -66,7 +66,8 @@ def volume(sound):
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.pos = pygame.math.Vector2(width/2, height/2)
+        self.grav = pygame.math.Vector2(width / 2, height / 2)
+        self.pos = pygame.math.Vector2(width / 2, height / 2)
         self.xPos, self.yPos = 200, 200
         self.xVel, self.yVel, self.xAcceleration, self.yAcceleration, self.force, self.angle = 0, 0, 0, 0, 0, 0
         self.decay = 0.98
@@ -81,10 +82,13 @@ class Player(pygame.sprite.Sprite):
         self.died = False
         self.distance = 0
         self.xA, self.yA, self.gForce = 0, 0, 0
-        self.xGrav, self.yGrav = 500, 500
         self.force = 0
         self.vel = pygame.math.Vector2()
         self.acc = pygame.math.Vector2()
+        self.thrustPos = pygame.math.Vector2()
+        self.front = pygame.math.Vector2()
+        self.left = pygame.math.Vector2()
+        self.right = pygame.math.Vector2()
         # self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
 
     def update(self):  # Is called every tick
@@ -112,31 +116,32 @@ class Player(pygame.sprite.Sprite):
         self.triangle = [(self.x[0], self.y[0]), (self.x[1], self.y[1]), (self.x[2], self.y[2])]  # X, Y Pos List
         self.triangle = pygame.draw.polygon(screen, colourDict['white'], self.triangle, 2)  # Draws the ship
         # self.triThrust = [(self.x[1], self.y[1]), (self.x[2], self.y[2]), (500, 500)]   cool effect
-        if self.force != 0:
+        if self.force != 0:  # Thrust Animation
             self.thrustPos = pygame.math.Vector2(int(self.pos.x-15 * math.sin(self.angle)), int(self.pos.y-15 * math.cos(self.angle)))
             self.front = pygame.math.Vector2(0, -self.radius/2)
             self.front.rotate_ip(math.degrees(-self.angle))
             self.left = self.front.rotate(-90)
             self.right = self.front.rotate(90)
-            pygame.draw.line(screen, colourDict['white'], (self.thrustPos + self.front), (self.thrustPos + self.left), 2)
-            pygame.draw.line(screen, colourDict['white'], (self.thrustPos + self.front), (self.thrustPos + self.right), 2)
+            pygame.draw.line(screen, (255, 255, 255), (self.thrustPos + self.front), (self.thrustPos + self.left), 2)
+            pygame.draw.line(screen, (255, 255, 255), (self.thrustPos + self.front), (self.thrustPos + self.right), 2)
 
     def posistionUpdate(self):
         self.angle = list(pygame.mouse.get_pos())  # Calculating angle in rads of mouse from the player
-        self.angle = [self.angle[0]-self.pos.x,self.angle[1]-self.pos.y]
-        self.angle = (math.atan2(self.angle[0],self.angle[1]))
+        self.angle = [self.angle[0]-self.pos.x, self.angle[1]-self.pos.y]
+        self.angle = (math.atan2(self.angle[0], self.angle[1]))
         if gravity:
-            pygame.draw.circle(screen, colourDict['white'], (self.xGrav, self.yGrav), 5)
-            self.distance = abs(math.sqrt(((self.pos.x - self.xGrav) ** 2) + ((self.pos.y - self.yGrav) ** 2)))
+            pygame.draw.circle(screen, colourDict['white'], (int(self.grav.x), int(self.grav.y)), 5)
+            self.distance = abs(math.sqrt(((self.pos.x - self.grav.x) ** 2) + ((self.pos.y - self.grav.y) ** 2)))
             self.gForce = 50 / self.distance ** 1.05  # V = GM/r
         if self.distance < 200:
             self.gForce = 0.3
         if gravity:
-            self.xA = self.gForce * (self.xGrav - self.pos.x) / self.distance
-            self.yA = self.gForce * (self.yGrav - self.pos.y) / self.distance
+            #self.gravAcc = pygame.math.Vector2(self.gForce * (self.grav.x - self.pos.x) / self.distance)
+            self.xA = self.gForce * (self.grav.x - self.pos.x) / self.distance
+            self.yA = self.gForce * (self.grav.y - self.pos.y) / self.distance
         self.acc = (math.sin(self.angle) * self.force + self.xA, math.cos(self.angle) * self.force + self.yA)
         self.vel *= self.decay
-        self.vel = self.vel + self.acc
+        self.vel += self.acc
         self.pos += self.vel
 
     def hit(self):
@@ -562,7 +567,7 @@ def rand_planets():
         print(count)
 
 
-def rand_Asteroids():
+def rand_spawns():
     global timeCount
     global numberOfAsteroids
     global asteroidRate
@@ -570,7 +575,10 @@ def rand_Asteroids():
         numberOfAsteroids += 1
     for i in range(0, numberOfAsteroids):  # Rotation , xPos, yPos
         Asteroids(0, 0, 0, 0, 0, 0)
-
+    player.grav = pygame.math.Vector2(random.randint(0, width), random.randint(0, height))
+    print(dir(player.pos))
+    print(dir(player.grav))
+    print(dir(player.vel))
 
 def change():
     myfunc = next(itertools.cycle([0, 1]))
@@ -609,7 +617,7 @@ def main():  # A bit messy try clean up
     s_time = time.time()
     startTime = time.time()
     player = Player()
-    rand_Asteroids()
+    rand_spawns()
     #rand_planets()    Cool Effect
     gravity = False
 
@@ -631,7 +639,7 @@ def main():  # A bit messy try clean up
             s_time = time.time()
             frameRate = str(frames)
             frames = 0
-            rand_Asteroids()
+            rand_spawns()
 
         frames += 1
         if player.deathTime != 0:
