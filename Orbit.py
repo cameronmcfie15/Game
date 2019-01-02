@@ -20,12 +20,12 @@ print(sys.platform)
 # Declaring / Assigning Variable
 pygame.init()  # Inizialises all of pygame
 monitorWidth = (GetSystemMetrics(0))
-os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % ((monitorWidth-1280)/2, 50)  # Location of Window
+os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % ((monitorWidth-WINDOWWIDTH)/2, 50)  # Location of Window
 #pygame.mixer.init()  # Inizialises sound in pygame
 fps = FRAMERATE  # Framerate, controls physics
 fpsClock = pygame.time.Clock()  # Sets up the pygame clock
 start_ticks = pygame.time.get_ticks()
-width, height = 1280, 960  # Window dimensions
+width, height = WINDOWWIDTH, WINDOWHEIGHT  # Window dimensions
 screen = pygame.display.set_mode((width, height))  # Sets up the screen
 font = pygame.font.SysFont('Verdana', 18)  # Sets up the Font
 center = height/2
@@ -34,12 +34,11 @@ colourDict = {'white': (255, 255, 255), 'brown': (160, 82, 45), 'black': (0, 0, 
 bg = pygame.image.load('Images/background1.png')  # Loads in the background image
 heart = pygame.image.load('Images/Heart.png')
 pygame.Surface.convert(bg)  # Don't have to do this. but meant to
-asteroidRate = 50  # bigger = slower
+asteroidRate = ASTEROIDRATE  # bigger = slower
 gravity = False
 # Constants
 Mass = 4*10**13  # Mass of Centre   5.972*10**24
 G = 6.67*10**-11  # Gravity Constant    6.67*10**-11
-decay = 0.98
 # Other Setup
 pygame.Surface.convert(bg)
 heart = pygame.transform.scale(heart, (12, 12))
@@ -75,10 +74,10 @@ class Player(pygame.sprite.Sprite):
         self.radius = 20
         self.triangle, self.x, self.y, self.velVector, self.triThrust = [], [], [], [], []
         self.deathTime = 0
-        self.cash = 0
-        self.shotSpeed = 5
-        self.shield = 0
-        self.lives = 3
+        self.cash = CASH
+        self.shotSpeed = SHOTSPEED
+        self.shield = SHIELD
+        self.lives = LIVES
         self.score = 0
         self.died = False
         self.distance = 0
