@@ -1,0 +1,2 @@
+This script took 1860.9576506614685 seconds and had an average framerate of 59.87401161998245
+This script took 36.740588665008545 seconds and had an average framerate of 58.355080250576634
