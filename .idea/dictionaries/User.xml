@@ -2,6 +2,7 @@
   <dictionary name="User">
     <words>
       <w>asteroidrate</w>
+      <w>asteroidspawn</w>
       <w>framerate</w>
       <w>grav</w>
       <w>inizialises</w>

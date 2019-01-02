@@ -7,10 +7,13 @@ Use google sheets for high scores
 Add difficulty (rate of aster spawns, lives)
 Need to randomise gravity well,
 Change pos, vels etc to vectors
+Make things more expensive as game goes on
+make heart out of lines
+make aliens
 """
 
 # Ctrl+Shift+NumPad -      To fold all
-import pygame, sys, random, math, time, threading, trace, itertools, profile, os, json
+import pygame, sys, random, math, time, threading, trace, itertools, profile, os
 import numpy as np
 from settings import *
 from win32api import GetSystemMetrics
@@ -31,16 +34,16 @@ font = pygame.font.SysFont('Verdana', 18)  # Sets up the Font
 center = height/2
 randColour = list(np.random.choice(range(256), size=3))  # Returns a random colour
 colourDict = {'white': (255, 255, 255), 'brown': (160, 82, 45), 'black': (0, 0, 0)}  # Predefined dictionary of colours
-bg = pygame.image.load('Images/background1.png')  # Loads in the background image
+#bg = pygame.image.load('Images/background1.png')  # Loads in the background image
 heart = pygame.image.load('Images/Heart.png')
-pygame.Surface.convert(bg)  # Don't have to do this. but meant to
+#pygame.Surface.convert(bg)  # Don't have to do this. but meant to
 asteroidRate = ASTEROIDRATE  # bigger = slower
 gravity = False
 # Constants
 Mass = 4*10**13  # Mass of Centre   5.972*10**24
 G = 6.67*10**-11  # Gravity Constant    6.67*10**-11
 # Other Setup
-pygame.Surface.convert(bg)
+#pygame.Surface.convert(bg)
 heart = pygame.transform.scale(heart, (12, 12))
 # --All the functions --
 
@@ -94,7 +97,7 @@ class Player(pygame.sprite.Sprite):
     def update(self):  # Is called every tick
         list(map(int, self.pos))
         if self.shield >= 1:
-            pygame.draw.circle(screen, colourDict['white'], self.pos, self.radius+5, 2)
+            pygame.draw.circle(screen, colourDict['white'], (int(self.pos.x), int(self.pos.y)), self.radius+5, 2)
 
         self.updatePoly()
         self.posistionUpdate()
@@ -469,7 +472,7 @@ class Button:
         screen.blit(font.render(self.text, False, (colourDict['white'])), (self.w, self.h))
         self.mouse = pygame.mouse.get_pos()
         self.check()
-        print(self.mouse)
+
     def check(self):
         if self.xPos < self.mouse[0] < int(self.xPos+self.width) and self.yPos < self.mouse[1] < int(self.yPos+self.height):
             for event in pygame.event.get():
@@ -579,6 +582,7 @@ def rand_spawns():
         Asteroids(0, 0, 0, 0, 0, 0)
     player.grav = pygame.math.Vector2(random.randint(0, width), random.randint(0, height))
 
+
 def change():
     myfunc = next(itertools.cycle([0, 1]))
     return myfunc
@@ -603,7 +607,6 @@ def menu(button):
                 player.cash -= 5
 
 
-
 def main():  # A bit messy try clean up
     global center, totFrames, timeCount, frameRate, textList, numberOfAsteroids, player
     global planetList, satList, missileList, shotList, asteroidList, frameRate
@@ -612,7 +615,7 @@ def main():  # A bit messy try clean up
     planetList, satList, missileList, shotList, asteroidList = [], [], [], [], []
     textList = {}
     text, frameRate = '', ''
-    numberOfAsteroids = 1  # Number of asteroids per second
+    numberOfAsteroids = ASTEROIDSPAWN  # Number of asteroids per second
     s_time = time.time()
     startTime = time.time()
     player = Player()
