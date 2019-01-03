@@ -3,13 +3,15 @@
 TO DO:
 Rotate using surface for sprites 
 Use better collisions
-Use google sheets for high scores
+Use google sheets for high scores, check if settings default
 Add difficulty (rate of aster spawns, lives)
 Need to randomise gravity well,
 Change pos, vels etc to vectors
 Make things more expensive as game goes on
 make heart out of lines
-make aliens
+make aliens , missles
+depress button
+THATS IT
 """
 
 # Ctrl+Shift+NumPad -      To fold all
