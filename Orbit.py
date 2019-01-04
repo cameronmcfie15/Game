@@ -4,7 +4,7 @@ TO DO:
 Rotate using surface for sprites 
 Use better collisions
 Use google sheets for high scores, check if settings default
-Add difficulty (rate of aster spawns, lives)
+Add difficulty (rate of aster spawns, lives) intro screen
 Need to randomise gravity well,
 Change pos, vels etc to vectors
 Make things more expensive as game goes on
@@ -12,6 +12,7 @@ make heart out of lines
 make aliens , missles
 depress button
 THATS IT
+Tidy up remove unnecessary things
 """
 
 # Ctrl+Shift+NumPad -      To fold all
@@ -69,9 +70,8 @@ def volume(sound):
     return sound.set_volume(0.0)
 
 
-class Player(pygame.sprite.Sprite):
+class Player:
     def __init__(self):
-        pygame.sprite.Sprite.__init__(self)
         self.grav = pygame.math.Vector2(width / 2, height / 2)
         self.pos = pygame.math.Vector2(width / 2, height / 2)
         self.xVel, self.yVel, self.xAcceleration, self.yAcceleration, self.force, self.angle = 0, 0, 0, 0, 0, 0
@@ -366,55 +366,147 @@ class Sat:  # Dunno what calls this but it works
         self.sat = pygame.draw.circle(screen, randColour, (int(self.xPos), int(self.yPos)), 2)
 
 
-class Missile:
-    def __init__(self, xPos, yPos, target):
-        self.xPos, self.yPos, self.target = xPos, yPos, target
-        self.xAcceleration, self.yAcceleration, self.force, self.xVel, self.yVel = 0, 0, 0, 0, 0
-        self.adjacent, self.opposite, self.count = 0, 0, 0
-        self.distance = 100
-        self.rocket = pygame.image.load('Images/missile1.png')
-        self.rect = self.rocket.get_rect()
+
+class Missile():
+    def __init__(self, pos, target):
         missileList.append(self)
+        self.pos = pygame.math.Vector2(player.pos.x, player.pos.y)
+        self.xVel, self.yVel, self.angle = 0, 0, 0
+        self.radius = 8
+        self.triangle, self.x, self.y, self.velVector, self.triThrust = [], [], [], [], []
+        self.score = 0
+        self.distance = 0
+        self.xA, self.yA, self.gForce = 0, 0, 0
+        self.force = 0
+        self.vel = pygame.math.Vector2()
+        self.acc = pygame.math.Vector2()
+        self.target = pygame.math.Vector2(500, 500)
+        # self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
 
-    def update(self):
-        if frames % 2 == 0:
-            self.rocket = pygame.image.load('Images/missile1.png')
+    def update(self):  # Is called every tick
+        list(map(int, self.pos))
+        self.updatePoly()
+        self.posistionUpdate()
+        #self.velVector = [math.atan2(self.xVel, self.yVel), math.sqrt(self.xVel**2+self.yVel**2)]  # Theta ,absolute
+        self.force = 0  # Resets force when button is not pushed down
+        # self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
+        # Above line and same for init  not needed at the moment but may be needed for other collisions
+
+    def sound(self):
+        pass
+
+    def updatePoly(self):
+        self.x, self.y = [], []  # Resets list of points so the previous points are not drawn again
+        self.triangle = [0, (3 * math.pi / 4), (5 * math.pi / 4)]  # Points around a circle describing a triangle
+        self.triangle = map(lambda x: x+(2*math.pi/4), self.triangle)  # Adding 90 degrees to angles
+        for t in self.triangle:  # Makes these angles to x, y pos
+            self.x.append(self.pos.x + self.radius * math.cos(t + -self.angle))   # Adds these coordinates to list
+            self.y.append(self.pos.y + self.radius * math.sin(t + -self.angle))   # Where the magic happens
+        self.triangle = [(self.x[0], self.y[0]), (self.x[1], self.y[1]), (self.x[2], self.y[2])]  # X, Y Pos List
+        self.triangle = pygame.draw.polygon(screen, colourDict['white'], self.triangle, 2)  # Draws the ship
+        # self.triThrust = [(self.x[1], self.y[1]), (self.x[2], self.y[2]), (500, 500)]   cool effect
+
+    def posistionUpdate(self):
+        self.mouse = pygame.mouse.get_pos()
+        self.angle = (math.atan2(500 - self.pos.x, 500 - self.pos.y))
+        self.vel = pygame.math.Vector2(math.sin(self.angle), math.cos(self.angle))
+        self.pos += self.vel * 2
+        pygame.draw.circle(screen, colourDict['white'], (int(500), int(500)), self.radius)
+
+    def hit(self):
+        if self.shield >= 1:
+            self.shield -= 1
         else:
-            self.rocket = pygame.image.load('Images/missile2.png')
-        self.positionUpdate()
-        #if timeSec > 15:
-        #    self.kill()
-        if self.distance < 30:
-            #planetList[0].kill()
-            self.kill()
-            pass
+            player.lives -= 1
+            if player.lives == 0:
+                print("You died!")
+                self.deathTime = timeCount
+                player.died = True
+                self.reset()
 
-    def kill(self):
-        self.xPos, self.yPos = 500, 500
-        global count
-        count += 1
-        #missileList.remove(self)
-        print('died', count)
-        rocketSpeed = 0
+    def reset(self):
+        self.shotSpeed = 0
+        self.cash = 0
+        #sys.exit()
 
-    def positionUpdate(self):
-        self.distance = math.sqrt(((self.target.xPos - self.xPos) ** 2) + ((self.target.yPos - self.yPos) ** 2))
-        #self.line = pygame.draw.line(screen, colourDict['white'], (self.xPos, self.yPos), (earth.xPos, earth.yPos), 1)
-        self.opposite = (self.target.yPos - self.yPos)  # Works out distance between the y axis
-        self.adjacent = (self.target.xPos - self.xPos)  # Works out distance between the x axis
-        #self.angle = math.atan2(self.opposite, self.adjacent)
-        #self.xVel = math.cos(self.angle)*self.distance*0.05
-        #self.yVel = math.sin(self.angle)*self.distance*0.05
-        self.xVel = (self.adjacent/self.distance)
-        self.yVel = (self.opposite/self.distance)
-        self.xPos += self.xVel # * timeSec  # Time sec works well for 1 target but needs to reset for multiply tartgets
-        self.yPos += self.yVel # * timeSec
-        self.rotater()
-
-    def rotater(self):
-        self.direction = math.atan2(self.opposite, self.adjacent) * -1
-        self.rotated = pygame.transform.rotate(self.rocket, math.degrees(self.direction)-90)
-        self.missile = screen.blit(self.rotated, (self.xPos, self.yPos))
+# class Missile:
+#     def __init__(self, pos, target):
+#         self.target = target
+#         self.xAcceleration, self.yAcceleration, self.force = 0, 0, 0
+#         self.adjacent, self.opposite, self.count = 0, 0, 0
+#         self.distance = 100
+#         #self.rect = self.rocket.get_rect()
+#         missileList.append(self)
+#         self.pos = pygame.math.Vector2(100, 100)
+#         self.vel = pygame.math.Vector2()
+#         self.radius = 5
+#
+#     def update(self):
+#         if frames % 2 == 0:
+#             self.rocket = pygame.image.load('Images/missile1.png')
+#         else:
+#             self.rocket = pygame.image.load('Images/missile2.png')
+#         self.positionUpdate()
+#         self.updatePoly()
+#         if self.distance < 30:
+#             self.kill()
+#
+#
+#     def kill(self):
+#         self.xPos, self.yPos = 500, 500
+#         global count
+#         count += 1
+#         #missileList.remove(self)
+#         print('died', count)
+#         rocketSpeed = 0
+#
+#     def updatePoly(self):
+#         self.angle = list(pygame.mouse.get_pos())
+#         self.angle = (math.atan2(self.angle[0], self.angle[1]))
+#         self.x, self.y = [], []  # Resets list of points so the previous points are not drawn again
+#         self.triangle = [0, (3 * math.pi / 4), (5 * math.pi / 4)]  # Points around a circle describing a triangle
+#         self.triangle = map(lambda x: x+(2*math.pi/4), self.triangle)  # Adding 90 degrees to angles
+#         for t in self.triangle:  # Makes these angles to x, y pos
+#             self.x.append(self.pos.x + self.radius * math.cos(t + -self.angle))   # Adds these coordinates to list
+#             self.y.append(self.pos.y + self.radius * math.sin(t + -self.angle))   # Where the magic happens
+#         self.triangle = [(self.x[0], self.y[0]), (self.x[1], self.y[1]), (self.x[2], self.y[2])]  # X, Y Pos List
+#         self.triangle = pygame.draw.polygon(screen, colourDict['white'], self.triangle, 2)  # Draws the ship
+#         # self.triThrust = [(self.x[1], self.y[1]), (self.x[2], self.y[2]), (500, 500)]   cool effect
+#
+#     def positionUpdate(self):
+#         self.distance = math.sqrt(((self.target.pos.x - self.pos.x) ** 2) + ((self.target.pos.y - self.pos.y) ** 2))
+#         self.opposite = (self.target.pos.x - self.pos.x)  # Works out distance between the y axis
+#         self.adjacent = (self.target.pos.y - self.pos.y)  # Works out distance between the x axis
+#         self.vel = pygame.math.Vector2(self.adjacent / self.distance, self.opposite / self.distance)
+#         self.pos += self.vel  # * timeSec  # Time sec works well for 1 target but needs to reset for multiply tartgets
+#         # self.rotater()
+#
+#
+#
+#         # self.angle = list(pygame.mouse.get_pos())  # Calculating angle in rads of mouse from the player
+#         # self.angle = [self.angle[0]-self.pos.x, self.angle[1]-self.pos.y]
+#         # #self.angle = [self.angle[0] - self.pos.x, self.angle[1] - self.pos.y]
+#         # self.angle = (math.atan2(self.angle[0], self.angle[1]))
+#         # if gravity:
+#         #     pygame.draw.circle(screen, colourDict['white'], (int(self.grav.x), int(self.grav.y)), 5)
+#         #     self.distance = abs(math.sqrt(((self.pos.x - self.grav.x) ** 2) + ((self.pos.y - self.grav.y) ** 2)))
+#         #     self.gForce = 50 / self.distance ** 1.05  # V = GM/r
+#         # if self.distance < 200:
+#         #     self.gForce = 0.3
+#         # if gravity:
+#         #     #self.gravAcc = pygame.math.Vector2(self.gForce * (self.grav.x - self.pos.x) / self.distance)
+#         #     self.xA = self.gForce * (self.grav.x - self.pos.x) / self.distance
+#         #     self.yA = self.gForce * (self.grav.y - self.pos.y) / self.distance
+#         # self.acc = (math.sin(self.angle) * self.force + self.xA, math.cos(self.angle) * self.force + self.yA)
+#         # self.vel *= self.decay
+#         # self.vel += self.acc
+#         # self.pos += self.vel
+#
+#
+#     # def rotater(self):
+#     #     self.direction = math.atan2(self.opposite, self.adjacent) * -1
+#     #     self.rotated = pygame.transform.rotate(self.rocket, math.degrees(self.direction)-90)
+#     #     self.missile = screen.blit(self.rotated, (self.xPos, self.yPos))
 
 
 class Shot(pygame.sprite.Sprite):
@@ -479,12 +571,13 @@ class Button:
         if self.xPos < self.mouse[0] < int(self.xPos+self.width) and self.yPos < self.mouse[1] < int(self.yPos+self.height):
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
+                    pygame.draw.rect(screen, colourDict['white'], (self.xPos, self.yPos, self.width, self.height), 5)
                     menu(self)
         # Also got check if mouse is clicked and only LMB
 
 
 def keyboard(pressed):
-    if pressed[pygame.K_5]:
+    if pressed[pygame.K_m]:
         pass
 
     if pressed[pygame.K_3]:
@@ -509,16 +602,18 @@ def hud():
             screen.blit(font.render("YOU DIED!", True, (colourDict['white'])), (width / 2 - 48, height / 2))
         textList.update({"shot speed": "Shot Speed: "+str(player.shotSpeed)})
         textList.update({"score": "Score: "+str(player.score)})
-        textList.update({"spawn rate": "Asteroid Spawn Rate: " + str(numberOfAsteroids)})
+        textList.update({"missile": "Missiles: " + str(numberOfAsteroids)})
         textList.update({"lives": "Lives: "})
         textList.update({"shield": "Shield: " + str(player.shield)})
         textList.update({"cash": "Credits: " + str(player.cash)})
-        screen.blit(font.render(textList["shot speed"], True, (colourDict['white'])), (width-172, 16 + 1 * 18))
+        textList.update({"time": "Time: " + str(timeCount)})
+        screen.blit(font.render(textList["missile"], True, (colourDict['white'])), (width-172, 16 + 2 * 18))
         screen.blit(font.render(textList["score"], True, (colourDict['white'])), (width/2-48, 16))
         screen.blit(font.render(textList["lives"], True, (colourDict['white'])), (32, 16 + 0 * 18))
-        screen.blit(font.render(textList["spawn rate"], True, (colourDict['white'])), (32, 16 + 1 * 18))
+        screen.blit(font.render(textList["missile"], True, (colourDict['white'])), (32, 16 + 1 * 18))
         screen.blit(font.render(textList["shield"], True, (colourDict['white'])), (32, 16 + 2 * 18))
-        screen.blit(font.render(textList["cash"], True, (colourDict['white'])), (width-172, 16 + 0 * 18))
+        screen.blit(font.render(textList["cash"], True, (colourDict['white'])), (width-172, 16 + 1 * 18))
+        screen.blit(font.render(textList["time"], True, (colourDict['white'])), (width - 172, 16 + 0 * 18))
         screen.blit(font.render("Frame Rate:"+frameRate, True, (colourDict['white'])), (width/2-48, 16 + 1 * 18))
     except Exception as e:
         print(e)
@@ -556,6 +651,8 @@ def event_handler():
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_b:
                 exitButton.pressed = True
+            if event.key == pygame.K_m:
+                Missile(player.pos, player)
 
 
 def rand_planets():
@@ -578,6 +675,7 @@ def rand_spawns():
     global timeCount
     global numberOfAsteroids
     global asteroidRate
+
     if timeCount % asteroidRate == 0:
         numberOfAsteroids += 1
     for i in range(0, numberOfAsteroids):  # Rotation , xPos, yPos
@@ -652,7 +750,7 @@ def main():  # A bit messy try clean up
 
 
 buttonList = []
-menuButton = Button("Menu, Cost 10 Credits", width/2, (height/5), 250, 50)
+menuButton = Button("Buy Missile", width/2, (height/5), 250, 50)
 livesButton = Button("Buy Lives", width / 2, (height / 5) + 50, 250, 50)
 shieldButton = Button("Buy Shields", width / 2, (height / 5) + 100, 250, 50)
 shotSpeedButton = Button("Buy Faster Shot Speed", width / 2, (height / 5) + 150, 250, 50)
