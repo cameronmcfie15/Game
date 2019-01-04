@@ -379,17 +379,25 @@ class Missile():
         self.xA, self.yA, self.gForce = 0, 0, 0
         self.force = 0
         self.vel = pygame.math.Vector2()
-        self.acc = pygame.math.Vector2()
         self.target = pygame.math.Vector2(500, 500)
+        self.asterList = {}
+        self.seeking = True
+        self.lowest = 0
         # self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
 
     def update(self):  # Is called every tick
         list(map(int, self.pos))
         self.updatePoly()
         self.posistionUpdate()
-        if distance(self.pos, self.startPos) > 100:
-            for asteroid in asteroidList:
-                distance(self.pos, asteroid.pos)
+        if self.seeking:
+            if distance(self.pos, self.startPos) > 100:
+                for asteroid in asteroidList:
+                    self.asterList.update({asteroid: distance(self.pos, [asteroid.xPos, asteroid.yPos])})
+                    self.lowest = (min(self.asterList, key=self.asterList.get))
+                    print(self.asterList[self.lowest])
+
+                self.seeking = False
+
         self.force = 0  # Resets force when button is not pushed down
 
     def sound(self):
