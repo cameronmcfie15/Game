@@ -167,9 +167,8 @@ class Player:
         #sys.exit()
 
 
-class Asteroids(pygame.sprite.Sprite):
+class Asteroids():
     def __init__(self, xPos, yPos, xVel, yVel ,mass, radius):
-        pygame.sprite.Sprite.__init__(self)
         asteroidList.append(self)  # Put into list so it can be easily destroyed and checked for stuff like collisions
         self.polyList, self.xy, self.poly, self.velVector, self.pos = [], [], [], [], []
         self.x, self.y, self.angle, self.force = 0, 0, 0, 0
@@ -371,8 +370,9 @@ class Missile():
     def __init__(self, pos, target):
         missileList.append(self)
         self.pos = pygame.math.Vector2(player.pos.x, player.pos.y)
+        self.startPos = pygame.math.Vector2(player.pos.x, player.pos.y)
         self.xVel, self.yVel, self.angle = 0, 0, 0
-        self.radius = 8
+        self.radius = 7
         self.triangle, self.x, self.y, self.velVector, self.triThrust = [], [], [], [], []
         self.score = 0
         self.distance = 0
@@ -387,10 +387,10 @@ class Missile():
         list(map(int, self.pos))
         self.updatePoly()
         self.posistionUpdate()
-        #self.velVector = [math.atan2(self.xVel, self.yVel), math.sqrt(self.xVel**2+self.yVel**2)]  # Theta ,absolute
+        if distance(self.pos, self.startPos) > 100:
+            for asteroid in asteroidList:
+                distance(self.pos, asteroid.pos)
         self.force = 0  # Resets force when button is not pushed down
-        # self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
-        # Above line and same for init  not needed at the moment but may be needed for other collisions
 
     def sound(self):
         pass
