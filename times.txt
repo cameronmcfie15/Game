@@ -1216,3 +1216,6 @@ This script took 3.2134506702423096 seconds and had an average framerate of 0.0
 This script took 5.80075740814209 seconds and had an average framerate of 0.0
 This script took 8.538696050643921 seconds and had an average framerate of 0.0
 This script took 12.21183466911316 seconds and had an average framerate of 0.0
+This script took 8.172653198242188 seconds and had an average framerate of 0.0
+This script took 25.011629819869995 seconds and had an average framerate of 0.0
+This script took 12.13853144645691 seconds and had an average framerate of 0.0

@@ -383,7 +383,10 @@ class Missile():
         self.asterList = {}
         self.seeking = True
         self.lowest = 0
-        # self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
+        self.target = pygame.mouse.get_pos()
+
+
+            # self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
 
     def update(self):  # Is called every tick
         list(map(int, self.pos))
@@ -394,7 +397,7 @@ class Missile():
                 for asteroid in asteroidList:
                     self.asterList.update({asteroid: distance(self.pos, [asteroid.xPos, asteroid.yPos])})
                     self.lowest = (min(self.asterList, key=self.asterList.get))
-                    print(self.asterList[self.lowest])
+                    self.target = [self.lowest.xPos, self.lowest.yPos]
 
                 self.seeking = False
 
@@ -415,11 +418,10 @@ class Missile():
         # self.triThrust = [(self.x[1], self.y[1]), (self.x[2], self.y[2]), (500, 500)]   cool effect
 
     def posistionUpdate(self):
-        self.mouse = pygame.mouse.get_pos()
-        self.angle = (math.atan2(500 - self.pos.x, 500 - self.pos.y))
+        self.angle = (math.atan2(self.target[0] - self.pos.x, self.target[1] - self.pos.y))
         self.vel = pygame.math.Vector2(math.sin(self.angle), math.cos(self.angle))
         self.pos += self.vel * 2
-        pygame.draw.circle(screen, colourDict['white'], (int(500), int(500)), self.radius)
+        #pygame.draw.circle(screen, colourDict['white'], (int(500), int(500)), self.radius)
 
     def hit(self):
         if self.shield >= 1:
