@@ -5,11 +5,8 @@ Run Orbit.py
 
 
 TO DO:
-
 Rotate using surface for sprites
-
 Use better collisions
-
 Use google sheets for high scores, check if settings default
 
 Add difficulty (rate of aster spawns, lives) intro screen
