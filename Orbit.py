@@ -9,8 +9,9 @@ Need to randomise gravity well,
 Change pos, vels etc to vectors
 Make things more expensive as game goes on
 make heart out of lines
-make aliens , missles
+make aliens , missiles
 depress button
+keyboard buy shortcuts
 THATS IT
 Tidy up remove unnecessary things
 """
@@ -88,6 +89,8 @@ class Player:
         self.distance = 0
         self.xA, self.yA, self.gForce = 0, 0, 0
         self.force = 0
+        self.missiles = 0
+        self.cost = 5
         self.vel = pygame.math.Vector2()
         self.acc = pygame.math.Vector2()
         self.thrustPos = pygame.math.Vector2()
@@ -365,8 +368,7 @@ class Sat:  # Dunno what calls this but it works
         self.sat = pygame.draw.circle(screen, randColour, (int(self.xPos), int(self.yPos)), 2)
 
 
-
-class Missile():
+class Missile:
     def __init__(self, pos, target):
         missileList.append(self)
         self.pos = pygame.math.Vector2(player.pos.x, player.pos.y)
@@ -379,11 +381,12 @@ class Missile():
         self.xA, self.yA, self.gForce = 0, 0, 0
         self.force = 0
         self.vel = pygame.math.Vector2()
-        self.target = pygame.math.Vector2(500, 500)
         self.asterList = {}
         self.seeking = True
         self.lowest = 0
         self.target = pygame.mouse.get_pos()
+        self.speed = 5
+        self.startTime = time.time()
 
 
             # self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
@@ -393,15 +396,19 @@ class Missile():
         self.updatePoly()
         self.posistionUpdate()
         if self.seeking:
-            if distance(self.pos, self.startPos) > 100:
+            print('looking...')
+            if time.time() - self.startTime > 0.5:
                 for asteroid in asteroidList:
                     self.asterList.update({asteroid: distance(self.pos, [asteroid.xPos, asteroid.yPos])})
                     self.lowest = (min(self.asterList, key=self.asterList.get))
                     self.target = [self.lowest.xPos, self.lowest.yPos]
-
                 self.seeking = False
-
-        self.force = 0  # Resets force when button is not pushed down
+        elif distance(self.pos, [self.lowest.pos[0], self.lowest.pos[1]]) < self.lowest.radius:
+            self.lowest.hit()
+            self.lowest.death()
+            self.destroy()
+        else:
+            self.target = [self.lowest.xPos, self.lowest.yPos]
 
     def sound(self):
         pass
@@ -418,21 +425,15 @@ class Missile():
         # self.triThrust = [(self.x[1], self.y[1]), (self.x[2], self.y[2]), (500, 500)]   cool effect
 
     def posistionUpdate(self):
+        print('tracking...')
         self.angle = (math.atan2(self.target[0] - self.pos.x, self.target[1] - self.pos.y))
         self.vel = pygame.math.Vector2(math.sin(self.angle), math.cos(self.angle))
-        self.pos += self.vel * 2
+        self.pos += self.vel * self.speed
         #pygame.draw.circle(screen, colourDict['white'], (int(500), int(500)), self.radius)
 
-    def hit(self):
-        if self.shield >= 1:
-            self.shield -= 1
-        else:
-            player.lives -= 1
-            if player.lives == 0:
-                print("You died!")
-                self.deathTime = timeCount
-                player.died = True
-                self.reset()
+    def destroy(self):
+        missileList.remove(self)
+
 
     def reset(self):
         self.shotSpeed = 0
@@ -440,9 +441,8 @@ class Missile():
         #sys.exit()
 
 
-class Shot(pygame.sprite.Sprite):
+class Shot:
     def __init__(self):
-        pygame.sprite.Sprite.__init__(self)
         shotList.append(self)
         self.sound()
         self.angle, self.xPos, self.yPos = player.angle, player.pos.x, player.pos.y
@@ -533,7 +533,7 @@ def hud():
             screen.blit(font.render("YOU DIED!", True, (colourDict['white'])), (width / 2 - 48, height / 2))
         textList.update({"shot speed": "Shot Speed: "+str(player.shotSpeed)})
         textList.update({"score": "Score: "+str(player.score)})
-        textList.update({"missile": "Missiles: " + str(numberOfAsteroids)})
+        textList.update({"missile": "Missiles: " + str(player.missiles)})
         textList.update({"lives": "Lives: "})
         textList.update({"shield": "Shield: " + str(player.shield)})
         textList.update({"cash": "Credits: " + str(player.cash)})
@@ -626,13 +626,16 @@ def menu(button):
     if mouse[0] == 1:
         if button == exitButton:
             button.pressed = False
-        if button == livesButton and player.cash > 10:
+        if button == livesButton and player.cash > 5:
             player.lives += 1
             player.cash -= 5
-        if button == shieldButton and player.cash > 10:
+        if button == shieldButton and player.cash > 5:
             player.shield += 1
             player.cash -= 5
-        if button == shotSpeedButton and player.cash > 10:
+        if button == missileButton and player.cash > 5:
+            player.missiles += 1
+            player.cash -= 5
+        if button == shotSpeedButton and player.cash > 5:
             if player.shotSpeed < 30:
                 player.shotSpeed += 5
                 player.cash -= 5
@@ -681,7 +684,7 @@ def main():  # A bit messy try clean up
 
 
 buttonList = []
-menuButton = Button("Buy Missile", width/2, (height/5), 250, 50)
+missileButton = Button("Buy Missile", width/2, (height/5), 250, 50)
 livesButton = Button("Buy Lives", width / 2, (height / 5) + 50, 250, 50)
 shieldButton = Button("Buy Shields", width / 2, (height / 5) + 100, 250, 50)
 shotSpeedButton = Button("Buy Faster Shot Speed", width / 2, (height / 5) + 150, 250, 50)
