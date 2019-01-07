@@ -1,15 +1,13 @@
 # Made By Cameron McFie
 """
 TO DO:
-Rotate using surface for sprites 
-Use better collisions
 Use google sheets for high scores, check if settings default
 Add difficulty (rate of aster spawns, lives) intro screen
 Need to randomise gravity well,
 Change pos, vels etc to vectors
 Make things more expensive as game goes on
 make heart out of lines
-make aliens , missiles
+make aliens , missiles, normalize direction vecto so not glitched
 depress button
 keyboard buy shortcuts
 THATS IT
@@ -53,12 +51,10 @@ heart = pygame.transform.scale(heart, (12, 12))
 
 
 def time_taken():  # Function that calculates framerate of the application and wrights it to text file
-    global totFrames
     endTime = time.time()
     file = open("times.txt","a")
     time_taken = float(endTime-startTime)
-    info = "This script took "+str(time_taken)+" seconds"+" and had an average framerate of "+str(totFrames/time_taken)
-    print(totFrames, (totFrames/time_taken))
+    info = "This script took "+str(time_taken)+" seconds"+" and had an average framerate of "+str(frames/time_taken)
     file.write(info+"\n")
     file.close()
 
@@ -68,7 +64,7 @@ def distance(v1, v2):  # Vectors 1 and 2
 
 
 def volume(sound):
-    return sound.set_volume(0.0)
+    return sound.set_volume(0.1)
 
 
 class Player:
@@ -76,6 +72,7 @@ class Player:
         self.grav = pygame.math.Vector2(width / 2, height / 2)
         self.pos = pygame.math.Vector2(width / 2, height / 2)
         self.xVel, self.yVel, self.xAcceleration, self.yAcceleration, self.force, self.angle = 0, 0, 0, 0, 0, 0
+        self.planetList, self.missileList, self.shotList, self.asteroidList = [], [], [], []
         self.decay = DECAY
         self.radius = 20
         self.triangle, self.x, self.y, self.velVector, self.triThrust = [], [], [], [], []
@@ -173,7 +170,7 @@ class Player:
 
 class Asteroids():
     def __init__(self, xPos, yPos, xVel, yVel ,mass, radius):
-        asteroidList.append(self)  # Put into list so it can be easily destroyed and checked for stuff like collisions
+        player.asteroidList.append(self)  # Put into list so it can be easily destroyed and checked for stuff like collisions
         self.polyList, self.xy, self.poly, self.velVector, self.pos = [], [], [], [], []
         self.x, self.y, self.angle, self.force = 0, 0, 0, 0
         self.density = 100
@@ -207,8 +204,8 @@ class Asteroids():
         self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
 
     def death(self):
-        if self in asteroidList:
-            asteroidList.remove(self)
+        if self in player.asteroidList:
+            player.asteroidList.remove(self)
 
     def explodeSound(self):
         thrustSound = pygame.mixer.Sound('Sounds/bangMedium.wav')
@@ -288,7 +285,7 @@ class Asteroids():
         if self.distance + 2 < player.radius + self.radius:  # the plus 2 gives a bit or breathing room
             self.death()
             player.hit()
-        for shot in shotList:
+        for shot in player.shotList:
             if distance(shot.pos, self.pos) < shot.radius + self.radius:
                 self.hit()
                 shot.death()
@@ -310,7 +307,7 @@ class Planet:
         self.distance = 1000  # Distance from the center of the gravity well
         self.xReset, self.yReset = xPos, yPos
         self.planet = pygame.draw.circle(screen, colourDict['brown'], (int(self.xPos), int(self.yPos)), 15)
-        planetList.append(self)
+        player.planetList.append(self)
 
 
     def update(self):  # Is called every tick, from here a method is decided
@@ -329,7 +326,7 @@ class Planet:
     def kill(self):
         global count
         count += 1
-        planetList.remove(self)
+        player.planetList.remove(self)
         print('died', count)
 
     def collided(self):
@@ -371,7 +368,7 @@ class Alein:  # Dunno what calls this but it works
 
 class Missile:
     def __init__(self, pos, target):
-        missileList.append(self)
+        player.missileList.append(self)
         self.pos = pygame.math.Vector2(player.pos.x, player.pos.y)
         self.startPos = pygame.math.Vector2(player.pos.x, player.pos.y)
         self.xVel, self.yVel, self.angle = 0, 0, 0
@@ -399,7 +396,7 @@ class Missile:
         if self.seeking:
             print('looking...')
             if time.time() - self.startTime > 0.5:
-                for asteroid in asteroidList:
+                for asteroid in player.asteroidList:
                     self.asterList.update({asteroid: distance(self.pos, [asteroid.xPos, asteroid.yPos])})
                     self.lowest = (min(self.asterList, key=self.asterList.get))
                     self.target = [self.lowest.xPos, self.lowest.yPos]
@@ -433,7 +430,7 @@ class Missile:
         #pygame.draw.circle(screen, colourDict['white'], (int(500), int(500)), self.radius)
 
     def destroy(self):
-        missileList.remove(self)
+        player.missileList.remove(self)
 
 
     def reset(self):
@@ -444,7 +441,7 @@ class Missile:
 
 class Shot:
     def __init__(self):
-        shotList.append(self)
+        player.shotList.append(self)
         self.sound()
         self.angle, self.xPos, self.yPos = player.angle, player.pos.x, player.pos.y
         self.xVel = math.sin(self.angle) * player.shotSpeed
@@ -470,7 +467,7 @@ class Shot:
             self.death()
 
     def death(self):
-        shotList.remove(self)
+        player.shotList.remove(self)
 
 
 class Button:
@@ -504,15 +501,6 @@ class Button:
 
 
 def keyboard(pressed):
-    if pressed[pygame.K_m]:
-        pass
-
-    if pressed[pygame.K_3]:
-        pass
-
-    if pressed[pygame.K_2]:
-        pass
-
     if pressed[pygame.K_g]:
         global gravity
         gravity = True
@@ -548,21 +536,19 @@ def hud():
         print(e)
 
 
-def updater():  # print(len(planetList))
+def updater():  # print(len(player.planetList))
     if exitButton.pressed:
         for button in buttonList:
             button.update()
-    for planet in planetList:
+    for planet in player.planetList:
         planet.update()
-    for sat in satList:
-        sat.update()
-    for missile in missileList:
+    for missile in player.missileList:
         missile.update()
-    for asteroid in asteroidList:
+    for asteroid in player.asteroidList:
         asteroid.update()
     player.update()
     try:
-        for shot in shotList:
+        for shot in player.shotList:
             shot.update()
     finally:
         pass
@@ -618,14 +604,17 @@ def menu(button):
         if button == exitButton:
             button.pressed = False
         if button == livesButton and player.cash > player.cost:
-            player.lives += 1
-            player.cash -= player.cost
+            if player.lives < 5:
+                player.lives += 1
+                player.cash -= player.cost
         if button == shieldButton and player.cash > player.cost:
-            player.shield += 1
-            player.cash -= player.cost
+            if player.shield < 10:
+                player.shield += 1
+                player.cash -= player.cost
         if button == missileButton and player.cash > player.cost:
-            player.missiles += 1
-            player.cash -= player.cost
+            if player.missiles < 10:
+                player.missiles += 1
+                player.cash -= player.cost
         if button == shotSpeedButton and player.cash > player.cost:
             if player.shotSpeed < 30:
                 player.shotSpeed += 5
@@ -633,26 +622,28 @@ def menu(button):
 
 
 def main():  # A bit messy try clean up
-    global center, totFrames, timeCount, frameRate, textList, numberOfAsteroids, player
-    global planetList, satList, missileList, shotList, asteroidList, frameRate
-    global frames, actualFps, startTime, gravity
+    global totFrames, timeCount, frameRate, textList, numberOfAsteroids, player
+    global frames, actualFps, startTime, gravity, intro
     frames, actualFps, count, degrees, score, timeCount, totFrames, frames, cash = 0, 0, 0, 0, 0, 0, 0, 0, 0
-    planetList, satList, missileList, shotList, asteroidList = [], [], [], [], []
     textList = {}
     text, frameRate = '', ''
     numberOfAsteroids = ASTEROIDSPAWN  # Number of asteroids per second
     s_time = time.time()
     startTime = time.time()
     player = Player()
+    player.planetList, satList, player.missileList, player.shotList, player.asteroidList = [], [], [], [], []
     rand_spawns()
     #rand_planets()    Cool Effect
     gravity = False
 
-
+    intro = False
     while True:  # main game loop
         screen.fill(colourDict['black'])
+        while intro:
+            # Use tkinter for start menu
+            pass
+
         hud()
-        # randColour = list(np.random.choice(range(256), size=3))
         updater()
         event_handler()
         pygame.display.update()
