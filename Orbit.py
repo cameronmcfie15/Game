@@ -100,6 +100,7 @@ class Player:
         # self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
 
     def update(self):  # Is called every tick
+        player.cost = int(4 + math.e**(timeCount*0.01))
         list(map(int, self.pos))
         if self.shield >= 1:
             pygame.draw.circle(screen, colourDict['white'], (int(self.pos.x), int(self.pos.y)), self.radius+5, 2)
@@ -355,7 +356,7 @@ class Planet:
         self.yPos += self.yVel
 
 
-class Sat:  # Dunno what calls this but it works
+class Alein:  # Dunno what calls this but it works
     def __init__(self, radius, planet, xPos, yPos, velocity, w):
         self.planet, self.radius, self.xPos, self.yPos, self.velocity, self.w = planet, radius, xPos, yPos, velocity, w
         satList.append(self)
@@ -363,8 +364,8 @@ class Sat:  # Dunno what calls this but it works
     def update(self):
         self.velocity = math.sqrt(G * self.planet.mass*10**15 / self.radius)
         self.w = self.velocity / self.radius
-        self.xPos = self.radius * math.cos(self.w * timeSec) + self.planet.xPos
-        self.yPos = self.radius * math.cos((self.w * timeSec) - (math.pi / 2)) + self.planet.yPos
+        self.xPos = self.radius * math.cos(self.w * timeCount) + self.planet.xPos
+        self.yPos = self.radius * math.cos((self.w * timeCount) - (math.pi / 2)) + self.planet.yPos
         self.sat = pygame.draw.circle(screen, randColour, (int(self.xPos), int(self.yPos)), 2)
 
 
@@ -472,11 +473,6 @@ class Shot:
         shotList.remove(self)
 
 
-class Alien:
-    def __init__(self):
-        pass
-
-
 class Button:
     def __init__(self, text, x_pos, y_pos, button_width, button_height):
         self.xPos = x_pos - (button_width/2)  # Top left corner of x, y posistions for rect
@@ -538,6 +534,7 @@ def hud():
         textList.update({"shield": "Shield: " + str(player.shield)})
         textList.update({"cash": "Credits: " + str(player.cash)})
         textList.update({"time": "Time: " + str(timeCount)})
+        textList.update({"cost": "Cost: " + str(player.cost)})
         screen.blit(font.render(textList["missile"], True, (colourDict['white'])), (width-172, 16 + 2 * 18))
         screen.blit(font.render(textList["score"], True, (colourDict['white'])), (width/2-48, 16))
         screen.blit(font.render(textList["lives"], True, (colourDict['white'])), (32, 16 + 0 * 18))
@@ -545,7 +542,8 @@ def hud():
         screen.blit(font.render(textList["shield"], True, (colourDict['white'])), (32, 16 + 2 * 18))
         screen.blit(font.render(textList["cash"], True, (colourDict['white'])), (width-172, 16 + 1 * 18))
         screen.blit(font.render(textList["time"], True, (colourDict['white'])), (width - 172, 16 + 0 * 18))
-        screen.blit(font.render("Frame Rate:"+frameRate, True, (colourDict['white'])), (width/2-48, 16 + 1 * 18))
+        screen.blit(font.render(textList["cost"], True, (colourDict['white'])), (width / 2 - 48, 16 + 1 * 18))
+        screen.blit(font.render("Frame Rate:"+frameRate, True, (colourDict['white'])), (width/2-48, 16 + 2 * 18))
     except Exception as e:
         print(e)
 
@@ -614,37 +612,30 @@ def rand_spawns():
     player.grav = pygame.math.Vector2(random.randint(0, width), random.randint(0, height))
 
 
-def change():
-    myfunc = next(itertools.cycle([0, 1]))
-    return myfunc
-    # PLus 1
-    # When divisible by 2
-
-
 def menu(button):
     mouse = pygame.mouse.get_pressed()
     if mouse[0] == 1:
         if button == exitButton:
             button.pressed = False
-        if button == livesButton and player.cash > 5:
+        if button == livesButton and player.cash > player.cost:
             player.lives += 1
-            player.cash -= 5
-        if button == shieldButton and player.cash > 5:
+            player.cash -= player.cost
+        if button == shieldButton and player.cash > player.cost:
             player.shield += 1
-            player.cash -= 5
-        if button == missileButton and player.cash > 5:
+            player.cash -= player.cost
+        if button == missileButton and player.cash > player.cost:
             player.missiles += 1
-            player.cash -= 5
-        if button == shotSpeedButton and player.cash > 5:
+            player.cash -= player.cost
+        if button == shotSpeedButton and player.cash > player.cost:
             if player.shotSpeed < 30:
                 player.shotSpeed += 5
-                player.cash -= 5
+                player.cash -= player.cost
 
 
 def main():  # A bit messy try clean up
     global center, totFrames, timeCount, frameRate, textList, numberOfAsteroids, player
     global planetList, satList, missileList, shotList, asteroidList, frameRate
-    global frames, actualFps, count, startTime, gravity
+    global frames, actualFps, startTime, gravity
     frames, actualFps, count, degrees, score, timeCount, totFrames, frames, cash = 0, 0, 0, 0, 0, 0, 0, 0, 0
     planetList, satList, missileList, shotList, asteroidList = [], [], [], [], []
     textList = {}
@@ -698,30 +689,3 @@ if __name__ == '__main__':
 # scaled = pygame.transform.scale(sol, (20, 20))
 # rotated = pygame.transform.rotate(scaled, degrees)
 # screen.blit(rotated, (400, 400))
-'''def scale(input):# Takes arguement that need changing
-    change input by factor
-    return value'''
-'''    def tile_texture(self, texture, size):
-        result = pygame.Surface(size, depth=32)
-        for x in range(0, size[0], texture.get_width()):
-            for y in range(0, size[1], texture.get_height()):
-                result.blit(texture, (x, y))
-        return result
-'''
-"""            self.pos = pygame.math.Vector2(int(self.xPos-15 * math.sin(self.angle)), int(self.yPos-15 * math.cos(self.angle)))
-            print((self.pos))
-            self.front = pygame.math.Vector2(0, -self.radius/2)
-            self.front.rotate_ip(math.degrees(-self.angle))
-            #self.front += 10 , 10
-            self.left = self.front.rotate(-90)
-            self.right = self.front.rotate(90)
-            # self.trithrust = pygame.draw.circle(screen, colourDict['white'], list(map(int, self.pos + self.left)), 2)
-            # self.trithrust = pygame.draw.circle(screen, colourDict['white'], list(map(int, self.pos + self.right)), 2)
-            # self.trithrust = pygame.draw.circle(screen, colourDict['white'], list(map(int, self.pos + self.front)), 2)  # Middle
-            # pygame.draw.line(screen, (0, 240, 50), self.pos, self.pos + self.front, 2)
-            # pygame.draw.line(screen, (240, 0, 50), self.pos, self.pos + self.left, 2)
-            # pygame.draw.line(screen, (240, 240, 0), self.pos, self.pos + self.right, 2)
-            pygame.draw.line(screen, colourDict['white'], (self.pos + self.front), (self.pos + self.left), 2)
-            pygame.draw.line(screen, colourDict['white'], (self.pos + self.front), (self.pos + self.right), 2)
-            #self.thrust = pygame.draw.polygon(screen, colourDict['white'], ((self.pos + self.left),(self.pos + self.right),(self.pos + self.front)), 2)
-"""
