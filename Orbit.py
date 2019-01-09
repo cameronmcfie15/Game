@@ -297,8 +297,8 @@ class Asteroids():
 
 class Alien:  # Dunno what calls this but it works
     def __init__(self):
-        self.w = 0.1  # Rotational Velocity
-        self.radius = 50
+        self.w = 0.04  # Rotational Velocity
+        self.radius = 40
         self.pos = pygame.math.Vector2(500, 500)
         self.vel = pygame.math.Vector2()
         self.count = 0
@@ -309,14 +309,16 @@ class Alien:  # Dunno what calls this but it works
         alien = pygame.transform.scale(alien, (50, 30))
         self.count += 1
         screen.blit(alien, (self.pos[0], self.pos[1]))
-        self.star()
+        self.star(0)
+        self.star(2*math.pi/3)
+        self.star(4*math.pi/3)
 
-    def star(self):
+    def star(self, startPos):
         self.count += 1
         pos = list()
-        pos.append(self.radius * math.cos(self.w*self.count) + self.pos[0])
-        pos.append(self.radius * math.sin((self.w*self.count)) + self.pos[1])
-        pygame.draw.circle(screen, randColour, (int(pos[0]), int(pos[1])), 2)
+        pos.append(self.radius * math.cos(self.w*self.count+startPos) + self.pos[0] + 25)
+        pos.append(self.radius * math.sin((self.w*self.count+startPos)) + self.pos[1] + 15)
+        pygame.draw.circle(screen, colourDict['white'], (int(pos[0]), int(pos[1])), 2)
 
 
 class Missile:
