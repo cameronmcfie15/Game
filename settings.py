@@ -1,4 +1,4 @@
-# Default settings for Orbit (Recommended)
+# Default settings for Orbit (Change at your own risk)
 FRAMERATE = 60  # Changes Physics, change at your own risk
 DECAY = 0.98  # How quickly you slow down, like friction
 WINDOWWIDTH = 1280

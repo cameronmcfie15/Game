@@ -1,11 +1,12 @@
 # Made By Cameron McFie
 """
 TO DO:
-Use google sheets for high scores, check if settings default
+Use google sheets for high scores, check if settings default maybe not
 Add difficulty (rate of aster spawns, lives) intro screen tk
 Need to randomise gravity well,
-make aliens , missiles, normalize direction vecto so not glitched
+make aliens , missiles, normalize direction vector so not glitched
 keyboard buy shortcuts
+add pause for menu?
 sound
 THATS IT
 Tidy up remove unnecessary things
@@ -16,8 +17,12 @@ import pygame, sys, random, math, time, threading, trace, itertools, profile, os
 import numpy as np
 from settings import *
 from win32api import GetSystemMetrics
+import tkinter
 
-print(os.name)
+if os.name != 'nt':
+    print('This game has only be tested on windows')
+
+
 # --Setup--
 # Declaring / Assigning Variable
 pygame.init()  # Inizialises all of pygame
@@ -46,6 +51,56 @@ G = 6.67*10**-11  # Gravity Constant    6.67*10**-11
 #pygame.Surface.convert(bg)
 heart = pygame.transform.scale(heart, (12, 12))
 # --All the functions --
+
+
+class Button:
+    def __init__(self, text, x_pos, y_pos, button_width, button_height):
+        self.xPos = x_pos - (button_width/2)  # Top left corner of x, y posistions for rect
+        self.yPos = y_pos - (button_height/2)
+        self.width = button_width
+        self.height = button_height
+        self.font = pygame.font.SysFont('Verdana', 18)
+        self.mouse = pygame.mouse.get_pos()
+        self.text = text
+        self.pressed = False
+        buttonList.append(self)  # x, y, width, height
+        self.text_width, self.text_height = self.font.size(self.text)
+        self.w = self.xPos+(self.width-self.text_width)/2  # x, y  coordinates for text
+        self.h = self.yPos+(self.height - self.text_height) / 2
+
+
+    def update(self):
+        pygame.draw.rect(screen, colourDict['white'], (self.xPos, self.yPos, self.width, self.height), 1)
+        screen.blit(font.render(self.text, False, (colourDict['white'])), (self.w, self.h))
+        self.mouse = pygame.mouse.get_pos()
+        self.check()
+
+    def check(self):
+        if self.xPos < self.mouse[0] < int(self.xPos+self.width) and self.yPos < self.mouse[1] < int(self.yPos+self.height):
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    pygame.draw.rect(screen, colourDict['white'], (self.xPos, self.yPos, self.width, self.height), 5)
+                    menu(self)
+        # Also got check if mouse is clicked and only LMB
+
+buttonList = []
+missileButton = Button("Buy Missile", width / 2, (height / 5), 250, 50)
+livesButton = Button("Buy Lives", width / 2, (height / 5) + 50, 250, 50)
+shieldButton = Button("Buy Shields", width / 2, (height / 5) + 100, 250, 50)
+shotSpeedButton = Button("Buy Faster Shot Speed", width / 2, (height / 5) + 150, 250, 50)
+exitButton = Button("Exit", width / 2, (height / 5) + 200, 250, 50)
+
+def start():
+    if __name__ == '__main__':
+        main()
+        # Missile(0, 0, player)
+        try:
+            main()
+        except Exception as e:
+            print(e)
+        #profile.run('main()')    #or main()
+
+
 
 
 def time_taken():  # Function that calculates framerate of the application and wrights it to text file
@@ -299,8 +354,8 @@ class Alien:  # Dunno what calls this but it works
     def __init__(self):
         self.w = 0.04  # Rotational Velocity
         self.radius = 40
-        self.pos = pygame.math.Vector2(500, 500)
-        self.vel = pygame.math.Vector2()
+        self.pos = pygame.math.Vector2(50, 50)
+        self.vel = pygame.math.Vector2(1.4, 1)
         self.count = 0
         player.alienList.append(self)
 
@@ -309,9 +364,14 @@ class Alien:  # Dunno what calls this but it works
         alien = pygame.transform.scale(alien, (50, 30))
         self.count += 1
         screen.blit(alien, (self.pos[0], self.pos[1]))
+        self.update_pos()
         self.star(0)
         self.star(2*math.pi/3)
         self.star(4*math.pi/3)
+
+    def update_pos(self):
+        self.pos += self.vel
+
 
     def star(self, startPos):
         self.count += 1
@@ -423,36 +483,6 @@ class Shot:
     def death(self):
         player.shotList.remove(self)
 
-
-class Button:
-    def __init__(self, text, x_pos, y_pos, button_width, button_height):
-        self.xPos = x_pos - (button_width/2)  # Top left corner of x, y posistions for rect
-        self.yPos = y_pos - (button_height/2)
-        self.width = button_width
-        self.height = button_height
-        self.font = pygame.font.SysFont('Verdana', 18)
-        self.mouse = pygame.mouse.get_pos()
-        self.text = text
-        self.pressed = False
-        buttonList.append(self)  # x, y, width, height
-        self.text_width, self.text_height = self.font.size(self.text)
-        self.w = self.xPos+(self.width-self.text_width)/2  # x, y  coordinates for text
-        self.h = self.yPos+(self.height - self.text_height) / 2
-
-
-    def update(self):
-        pygame.draw.rect(screen, colourDict['white'], (self.xPos, self.yPos, self.width, self.height), 1)
-        screen.blit(font.render(self.text, False, (colourDict['white'])), (self.w, self.h))
-        self.mouse = pygame.mouse.get_pos()
-        self.check()
-
-    def check(self):
-        if self.xPos < self.mouse[0] < int(self.xPos+self.width) and self.yPos < self.mouse[1] < int(self.yPos+self.height):
-            for event in pygame.event.get():
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    pygame.draw.rect(screen, colourDict['white'], (self.xPos, self.yPos, self.width, self.height), 5)
-                    menu(self)
-        # Also got check if mouse is clicked and only LMB
 
 
 def keyboard(pressed):
@@ -630,17 +660,24 @@ def main():  # A bit messy try clean up
                 main()
 
 
-buttonList = []
-missileButton = Button("Buy Missile", width/2, (height/5), 250, 50)
-livesButton = Button("Buy Lives", width / 2, (height / 5) + 50, 250, 50)
-shieldButton = Button("Buy Shields", width / 2, (height / 5) + 100, 250, 50)
-shotSpeedButton = Button("Buy Faster Shot Speed", width / 2, (height / 5) + 150, 250, 50)
-exitButton = Button("Exit", width / 2, (height / 5) + 200, 250, 50)
+root = tkinter.Tk()
 
-if __name__ == '__main__':
-    # Missile(0, 0, player)
-    main()
-    #profile.run('main()')    #or main()
+optionList = ["Easy", "Normal", "Hard", "Extreme"]
+default = tkinter.StringVar()
+default.set("Normal")
+
+menu = tkinter.OptionMenu(root, default, *optionList).pack()
+text = tkinter.Text(root, height=14, width=60)
+text.pack()
+text.insert(tkinter.END, "Orbit\nA Game similar to the arcade game Asteroids\n\nAim: Get the highest score possible by shooting"
+                 " asteroids\n\nControls:\nSpace = Forward\nMouse = Direction of ship\nB = Buy Menu\n1 = Buy Missiles"
+                 "\n2 = Buy Lives\n3 = Buy Shields\n4 = Buy Faster Shot")
+startButton = tkinter.Button(root, text="Start", command=start)
+startButton.pack()
+
+root.mainloop()
+
+
 
 # scaled = pygame.transform.scale(sol, (20, 20))
 # rotated = pygame.transform.rotate(scaled, degrees)
