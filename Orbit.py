@@ -1,7 +1,7 @@
 # Made By Cameron McFie
 """
 TO DO:
-Use google sheets for high scores, check if settings default maybe not
+high score display
 Add difficulty (rate of aster spawns, lives) intro screen tk
 Need to randomise gravity well,
 make aliens , missiles, normalize direction vector so not glitched
@@ -92,7 +92,7 @@ exitButton = Button("Exit", width / 2, (height / 5) + 200, 250, 50)
 
 def start():
     if __name__ == '__main__':
-        main()
+        root.destroy()
         # Missile(0, 0, player)
         try:
             main()
@@ -506,7 +506,7 @@ def hud():
         textList.update({"lives": "Lives: "})
         textList.update({"shield": "Shield: " + str(player.shield)})
         textList.update({"cash": "Credits: " + str(player.cash)})
-        textList.update({"time": "Time: " + str(timeCount)})
+        textList.update({"time": "Time: " + str(timeCount) + "  " + str(default.get())})
         textList.update({"cost": "Cost: " + str(player.cost)})
         screen.blit(font.render(textList["missile"], True, (colourDict['white'])), (width-172, 16 + 2 * 18))
         screen.blit(font.render(textList["score"], True, (colourDict['white'])), (width/2-48, 16))
@@ -555,22 +555,22 @@ def event_handler():
                 exitButton.pressed = True
             if event.key == pygame.K_m and player.missiles > 0:
                 Missile(player.pos, player)
-
-
-def rand_planets():
-    count = 0
-    for i in range(0, 1000):
-        count += 1
-        x = random.randint(1, 1000)
-        y = random.randint(1, 1000)
-        xv = random.uniform(-5, 5)
-        yv = random.uniform(-5, 5)
-        #yv = math.sqrt((G * Mass) / (500-x))
-        #print(xv)
-        #Planet(1, x, 500, 0, yv)
-        Planet(1,x,y,xv,yv)
-        #Missile(500, 500, count)
-        print(count)
+            if event.key == pygame.K_2 and player.cash > player.cost:
+                if player.lives < 5:
+                    player.lives += 1
+                    player.cash -= player.cost
+            if event.key == pygame.K_3 and player.cash > player.cost:
+                if player.shield < 10:
+                    player.shield += 1
+                    player.cash -= player.cost
+            if event.key == pygame.K_1 and player.cash > player.cost:
+                if player.missiles < 10:
+                    player.missiles += 1
+                    player.cash -= player.cost
+            if event.key == pygame.K_4 and player.cash > player.cost:
+                if player.shotSpeed < 30:
+                    player.shotSpeed += 5
+                    player.cash -= player.cost
 
 
 def rand_spawns():
@@ -616,13 +616,20 @@ def menu(button):
                 player.cash -= player.cost
 
 
-def main():  # A bit messy try clean up
+def main():  # A bit messy try clean up  ["Easy", "Normal", "Hard", "Extreme"]
     global totFrames, timeCount, frameRate, textList, numberOfAsteroids, player
-    global frames, actualFps, startTime, gravity, intro
+    global frames, actualFps, startTime, gravity, asteroidRate
     frames, actualFps, count, degrees, score, timeCount, totFrames, frames, cash = 0, 0, 0, 0, 0, 0, 0, 0, 0
     textList = {}
     text, frameRate = '', ''
-    numberOfAsteroids = ASTEROIDSPAWN  # Number of asteroids per second
+    numberOfAsteroids = ASTEROIDSPAWN
+    if default.get() == 'Easy':
+        asteroidRate *= 2
+    elif default.get() == 'Hard':
+        asteroidRate *= 0.5
+    elif default.get() == 'Extreme':
+        asteroidRate *= 0.2
+      # Number of asteroids per second
     s_time = time.time()
     startTime = time.time()
     player = Player()
@@ -634,10 +641,6 @@ def main():  # A bit messy try clean up
     intro = False
     while True:  # main game loop
         screen.fill(colourDict['black'])
-        while intro:
-            # Use tkinter for start menu
-            pass
-
         hud()
         updater()
         event_handler()
@@ -667,10 +670,10 @@ default = tkinter.StringVar()
 default.set("Normal")
 
 menu = tkinter.OptionMenu(root, default, *optionList).pack()
-text = tkinter.Text(root, height=14, width=60)
+text = tkinter.Text(root, height=17, width=60)
 text.pack()
 text.insert(tkinter.END, "Orbit\nA Game similar to the arcade game Asteroids\n\nAim: Get the highest score possible by shooting"
-                 " asteroids\n\nControls:\nSpace = Forward\nMouse = Direction of ship\nB = Buy Menu\n1 = Buy Missiles"
+                 " asteroids;\n At random points during the game Aleinds and Gravity Wells may appear\n Be careful!\n\nControls:\nSpace = Forward\nMouse = Direction of ship\nM = Fire Missile\nB = Buy Menu\n1 = Buy Missiles"
                  "\n2 = Buy Lives\n3 = Buy Shields\n4 = Buy Faster Shot")
 startButton = tkinter.Button(root, text="Start", command=start)
 startButton.pack()
