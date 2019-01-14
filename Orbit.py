@@ -2,11 +2,8 @@
 """
 TO DO:
 high score display
-Add difficulty (rate of aster spawns, lives) intro screen tk
 Need to randomise gravity well,
 make aliens , missiles, normalize direction vector so not glitched
-keyboard buy shortcuts
-add pause for menu?
 sound
 THATS IT
 Tidy up remove unnecessary things
@@ -218,7 +215,7 @@ class Player:
         #sys.exit()
 
 
-class Asteroids():
+class Asteroids:
     def __init__(self, xPos, yPos, xVel, yVel ,mass, radius):
         player.asteroidList.append(self)  # Put into list so it can be easily destroyed and checked for stuff like collisions
         self.polyList, self.xy, self.poly, self.velVector, self.pos = [], [], [], [], []
@@ -354,13 +351,24 @@ class Alien:  # Dunno what calls this but it works
     def __init__(self):
         self.w = 0.04  # Rotational Velocity
         self.radius = 40
-        self.pos = pygame.math.Vector2(50, 50)
-        self.vel = pygame.math.Vector2(1.4, 1)
+        self.pos = pygame.math.Vector2()
+        self.vel = pygame.math.Vector2()
         self.count = 0
         player.alienList.append(self)
+        self.axisStart = random.choice([0, 1])
+        if self.axisStart == 1:
+            self.pos.x = random.randint(-100, width + 100)
+            self.pos.y = random.choice([-100, height + 100])
+            if self.pos.y == -100:
+                self.vel.y = random.randint(1, 4)
+        else:
+            self.pos.x = random.choice([-100, width + 100])
+            self.pos.y = random.randint(-100, height + 100)
 
     def update(self):
-        global alien
+        global alien, gravity
+        print(gravity)
+        print(self.pos)
         alien = pygame.transform.scale(alien, (50, 30))
         self.count += 1
         screen.blit(alien, (self.pos[0], self.pos[1]))
@@ -372,12 +380,11 @@ class Alien:  # Dunno what calls this but it works
     def update_pos(self):
         self.pos += self.vel
 
-
-    def star(self, startPos):
+    def star(self, start_pos):
         self.count += 1
         pos = list()
-        pos.append(self.radius * math.cos(self.w*self.count+startPos) + self.pos[0] + 25)
-        pos.append(self.radius * math.sin((self.w*self.count+startPos)) + self.pos[1] + 15)
+        pos.append(self.radius * math.cos(self.w*self.count+start_pos) + self.pos[0] + 25)
+        pos.append(self.radius * math.sin((self.w*self.count+start_pos)) + self.pos[1] + 15)
         pygame.draw.circle(screen, colourDict['white'], (int(pos[0]), int(pos[1])), 2)
 
 
@@ -579,6 +586,9 @@ def rand_spawns():
     global asteroidRate
     global gravity
 
+    if timeCount % 5 == 0:
+        if random.randint(0, player.cost) > 4:
+            Alien()
     if timeCount % asteroidRate == 0:
         numberOfAsteroids += 1
     for i in range(0, numberOfAsteroids):  # Rotation , xPos, yPos
@@ -637,7 +647,6 @@ def main():  # A bit messy try clean up  ["Easy", "Normal", "Hard", "Extreme"]
     rand_spawns()
     #rand_planets()    Cool Effect
     gravity = False
-    Alien()
     intro = False
     while True:  # main game loop
         screen.fill(colourDict['black'])

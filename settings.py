@@ -7,6 +7,6 @@ ASTEROIDSPAWN = 1  # Number of asteroids spawned per second
 ASTEROIDRATE = 10  # Bigger = Slower spawn rate, how fast the above value changes
 CASH = 0  # Starting Cash
 SHOTSPEED = 5  # Starting shot speed, increments of 5
-SHIELD = 0
+SHIELD = 100
 LIVES = 3
 
