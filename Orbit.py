@@ -1,12 +1,14 @@
 # Made By Cameron McFie
 """
 TO DO:
+turn off music
 high score display
 Need to randomise gravity well,
 make aliens , missiles, normalize direction vector so not glitched
 sound
 goes from one side of the screen to the other
 need to check if shot damages aster or player
+use class inheritence to make norm object with pos vel destroy etc... way to much work
 THATS IT
 Tidy up remove unnecessary things
 """
@@ -67,7 +69,6 @@ class Button:
         self.w = self.xPos+(self.width-self.text_width)/2  # x, y  coordinates for text
         self.h = self.yPos+(self.height - self.text_height) / 2
 
-
     def update(self):
         pygame.draw.rect(screen, colourDict['white'], (self.xPos, self.yPos, self.width, self.height), 1)
         screen.blit(font.render(self.text, False, (colourDict['white'])), (self.w, self.h))
@@ -126,7 +127,7 @@ class Player:
         self.planetList, self.missileList, self.shotList, self.asteroidList, self.alienList = [], [], [], [], []
         self.decay = DECAY
         self.radius = 20
-        self.triangle, self.x, self.y, self.velVector, self.triThrust = [], [], [], [], []
+        self.triangle, self.x, self.y, self.velVector, self.triThrust, self.alienShotList = [], [], [], [], [], []
         self.deathTime = 0
         self.cash = CASH
         self.shotSpeed = SHOTSPEED
@@ -358,26 +359,32 @@ class Alien:  # Dunno what calls this but it works
         self.count, self.angle = 0, 0
         player.alienList.append(self)
         self.axisStart = random.choice([0, 1])
+        self.axisStart = 0
         if self.axisStart == 1:
-            self.pos.x = random.randint(-100, width + 100)
-            self.pos.y = random.choice([-100, height + 100])
-            if self.pos.y == -100:
+            self.pos.x = random.randint(-50, width + 50)
+            self.pos.y = random.choice([-50, height + 50])
+            if self.pos.y == -50:
                 self.vel.y = random.uniform(0.5, 2)
                 self.vel.x = random.uniform(-1, 1)
+                print('TOP')
             else:
                 self.vel.y = random.uniform(-2, -0.5)
                 self.vel.x = random.uniform(-1, 1)
+                print('BOTTOM')
         else:
-            self.pos.x = random.choice([-100, width + 100])
-            self.pos.y = random.randint(-100, height + 100)
-            if self.pos.x == -100:
+            self.pos.x = random.choice([-50, width + 50])
+            self.pos.y = random.randint(-50, height + 50)
+            if self.pos.x == -50:
+                print('LEFT')
                 self.vel.y = random.uniform(-1, 1)
                 self.vel.x = random.uniform(0.5, 2)
             else:
+                print('RIGHT')
                 self.vel.y = random.uniform(-1, 1)
-                self.vel.x = random.uniform(0.5, 2)
+                self.vel.x = random.uniform(-0.5, -2)
 
     def update(self):
+        print(len(player.shotList))
         global alien, gravity
         alien = pygame.transform.scale(alien, (50, 30))
         self.count += 1
@@ -387,12 +394,13 @@ class Alien:  # Dunno what calls this but it works
         self.star(2*math.pi/3)
         self.star(4*math.pi/3)
         self.collisions()
-        self.shoot()
+        self.shotChance = random.randint(0, 100)
+        if self.shotChance <= 2:
+            self.shoot()
 
     def shoot(self):
         self.angle = random.uniform(-2*math.pi, 2*math.pi)
-        Shot(self.angle, self.pos.x, self.pos.y)
-        pass
+        AlienShot(self.angle, self.pos.x+25, self.pos.y+15)
 
     def collisions(self):
         for shot in player.shotList:
@@ -414,7 +422,7 @@ class Alien:  # Dunno what calls this but it works
         pygame.draw.circle(screen, colourDict['white'], (int(pos[0]), int(pos[1])), 2)
 
     def bound_check(self):
-        if self.pos.x < -300 or self.pos.x > (width+300) or self.pos.y < -300 or self.pos.y > (width+300):
+        if self.pos.x < -100 or self.pos.x > (width+100) or self.pos.y < -100 or self.pos.y > (width+100):
             if self in player.alienList:
                 player.alienList.remove(self)
 
@@ -494,7 +502,6 @@ class Missile:
 class Shot:
     def __init__(self, angle, xPos, yPos):
         player.shotList.append(self)
-        self.playerHit = True
         self.sound()
         self.angle, self.xPos, self.yPos = angle, xPos, yPos
         self.xVel = math.sin(self.angle) * player.shotSpeed
@@ -523,6 +530,36 @@ class Shot:
         player.shotList.remove(self)
 
 
+class AlienShot:
+    def __init__(self, angle, xPos, yPos):
+        player.alienShotList.append(self)
+        self.playerHit = True
+        self.sound()
+        self.angle, self.xPos, self.yPos = angle, xPos, yPos
+        self.xVel = math.sin(self.angle) * 5
+        self.yVel = math.cos(self.angle) * 5
+        self.distance = 0
+        self.radius = 4
+        self.pos = [xPos, yPos]
+        self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
+
+    def sound(self):
+        fireSound = pygame.mixer.Sound('Sounds/fire.wav')
+        fireSound.play()
+        volume(fireSound)
+
+    def update(self):
+        self.pos = [self.xPos, self.yPos]
+        self.xPos += self.xVel
+        self.yPos += self.yVel
+        self.shot = pygame.draw.circle(screen, colourDict['white'], (int(self.xPos), int(self.yPos)), self.radius)
+        self.distance = abs(math.sqrt(((self.xPos - center) ** 2) + ((self.yPos - center) ** 2)))
+        self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
+        if self.distance > 1000:
+            self.death()
+
+    def death(self):
+        player.shotList.remove(self)
 
 def keyboard(pressed):
     if pressed[pygame.K_g]:
@@ -678,7 +715,6 @@ def main():  # A bit messy try clean up  ["Easy", "Normal", "Hard", "Extreme"]
     rand_spawns()
     #rand_planets()    Cool Effect
     gravity = False
-    intro = False
     while True:  # main game loop
         screen.fill(colourDict['black'])
         hud()

@@ -1374,3 +1374,15 @@ This script took 12.270761251449585 seconds and had an average framerate of 0.65
 This script took 4.803757429122925 seconds and had an average framerate of 8.951326255424805
 This script took 28.42696976661682 seconds and had an average framerate of 0.2462450291912732
 This script took 28.229307174682617 seconds and had an average framerate of 1.59408800653663
+This script took 1.1580860614776611 seconds and had an average framerate of 5.180962105997799
+This script took 6.440240144729614 seconds and had an average framerate of 2.484379408288624
+This script took 9.608069896697998 seconds and had an average framerate of 3.1223752868731824
+This script took 14.263447284698486 seconds and had an average framerate of 0.8413113436380374
+This script took 3.291269063949585 seconds and had an average framerate of 4.253678361744067
+This script took 25.093552589416504 seconds and had an average framerate of 2.191798064623057
+This script took 16.470512866973877 seconds and had an average framerate of 1.0321475801817825
+This script took 59.36808729171753 seconds and had an average framerate of 0.033688132652355485
+This script took 36.137940645217896 seconds and had an average framerate of 1.2175569281041057
+This script took 64.14381837844849 seconds and had an average framerate of 0.04676990044933094
+This script took 9.336848735809326 seconds and had an average framerate of 1.392332720368651
+This script took 27.474548816680908 seconds and had an average framerate of 0.47316518595956614
