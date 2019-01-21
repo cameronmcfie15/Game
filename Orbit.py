@@ -1,12 +1,5 @@
-# Made By Cameron McFie
-"""
-TO DO:
-Need to randomise gravity well,
-THATS IT
-Tidy up remove unnecessary things
-"""
+# Made By Cameron McFie 22/01/2019
 
-# Ctrl+Shift+NumPad -      To fold all
 import pygame, sys, random, math, time, os
 import numpy as np
 from settings import *
@@ -40,6 +33,29 @@ heart = pygame.transform.scale(heart, (12, 12))
 # --All the functions --
 
 
+def buyMenu(button):
+    mouse = pygame.mouse.get_pressed()
+    if mouse[0] == 1:
+        if button == exitButton:
+            button.pressed = False
+        if button == livesButton and player.cash > player.cost:
+            if player.lives < 5:
+                player.lives += 1
+                player.cash -= player.cost
+        if button == shieldButton and player.cash > player.cost:
+            if player.shield < 10:
+                player.shield += 1
+                player.cash -= player.cost
+        if button == missileButton and player.cash > player.cost:
+            if player.missiles < 10:
+                player.missiles += 1
+                player.cash -= player.cost
+        if button == shotSpeedButton and player.cash > player.cost:
+            if player.shotSpeed < 30:
+                player.shotSpeed += 5
+                player.cash -= player.cost
+
+
 class Button:
     def __init__(self, text, x_pos, y_pos, button_width, button_height):
         self.xPos = x_pos - (button_width/2)  # Top left corner of x, y posistions for rect
@@ -66,7 +82,8 @@ class Button:
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     pygame.draw.rect(screen, colourDict['white'], (self.xPos, self.yPos, self.width, self.height), 5)
-                    menu(self.text)
+                    buyMenu(self)
+
 
 
 buttonList = []
@@ -573,7 +590,7 @@ def rand_spawns():
     global counted
     startTime = 0
     if timeCount % 5 == 0:
-        if random.randint(0, player.cost) > 4:
+        if random.randint(0, player.cost) > 5:
             Alien()
     if timeCount % asteroidRate == 0:
         numberOfAsteroids += 1
@@ -587,28 +604,6 @@ def rand_spawns():
     if counted > 10:
         gravity = False
 
-
-def menu(button):
-    mouse = pygame.mouse.get_pressed()
-    if mouse[0] == 1:
-        if button == exitButton:
-            button.pressed = False
-        if button == livesButton and player.cash > player.cost:
-            if player.lives < 5:
-                player.lives += 1
-                player.cash -= player.cost
-        if button == shieldButton and player.cash > player.cost:
-            if player.shield < 10:
-                player.shield += 1
-                player.cash -= player.cost
-        if button == missileButton and player.cash > player.cost:
-            if player.missiles < 10:
-                player.missiles += 1
-                player.cash -= player.cost
-        if button == shotSpeedButton and player.cash > player.cost:
-            if player.shotSpeed < 30:
-                player.shotSpeed += 5
-                player.cash -= player.cost
 
 
 def main():  # A bit messy try clean up  ["Easy", "Normal", "Hard", "Extreme"]
@@ -687,9 +682,3 @@ startButton = tkinter.Button(root, text="Start", command=start)
 startButton.pack()
 
 root.mainloop()
-
-
-
-# scaled = pygame.transform.scale(sol, (20, 20))
-# rotated = pygame.transform.rotate(scaled, degrees)
-# screen.blit(rotated, (400, 400))
