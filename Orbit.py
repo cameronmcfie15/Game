@@ -7,7 +7,7 @@ Tidy up remove unnecessary things
 """
 
 # Ctrl+Shift+NumPad -      To fold all
-import pygame, sys, random, math, time, profile, os
+import pygame, sys, random, math, time, os
 import numpy as np
 from settings import *
 from win32api import GetSystemMetrics
@@ -28,8 +28,8 @@ font = pygame.font.SysFont('Verdana', 18)  # Sets up the Font
 center = height/2
 randColour = list(np.random.choice(range(256), size=3))  # Returns a random colour
 colourDict = {'white': (255, 255, 255), 'brown': (160, 82, 45), 'black': (0, 0, 0)}  # Predefined dictionary of colours
-heart = pygame.image.load('Images/Heart.png')
-alien = pygame.image.load('Images/alien.png')
+heart = pygame.image.load('Images\Heart.png')
+alien = pygame.image.load('Images\Alien.png')
 asteroidRate = ASTEROIDRATE  # bigger = slower
 gravity = False
 # Constants
@@ -66,7 +66,7 @@ class Button:
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     pygame.draw.rect(screen, colourDict['white'], (self.xPos, self.yPos, self.width, self.height), 5)
-                    menu(self)
+                    menu(self.text)
 
 
 buttonList = []
@@ -439,7 +439,6 @@ class Missile:
         self.cash = 0
 
 
-
 class Shot:
     def __init__(self, angle, xPos, yPos):
         player.shotList.append(self)
@@ -587,7 +586,6 @@ def rand_spawns():
         counted += 1
     if counted > 10:
         gravity = False
-
 
 
 def menu(button):
