@@ -1,27 +1,17 @@
 # Made By Cameron McFie
 """
 TO DO:
-turn off music
-high score display
 Need to randomise gravity well,
-make aliens , missiles, normalize direction vector so not glitched
-sound
-goes from one side of the screen to the other
-need to check if shot damages aster or player
-use class inheritence to make norm object with pos vel destroy etc... way to much work
 THATS IT
 Tidy up remove unnecessary things
 """
 
 # Ctrl+Shift+NumPad -      To fold all
-import pygame, sys, random, math, time, threading, trace, itertools, profile, os
+import pygame, sys, random, math, time, profile, os
 import numpy as np
 from settings import *
 from win32api import GetSystemMetrics
 import tkinter
-
-if os.name != 'nt':
-    print('This game has only be tested on windows')
 
 
 # --Setup--
@@ -29,7 +19,6 @@ if os.name != 'nt':
 pygame.init()  # Inizialises all of pygame
 monitorWidth = (GetSystemMetrics(0))
 os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % ((monitorWidth-WINDOWWIDTH)/2, 50)  # Location of Window
-#pygame.mixer.init()  # Inizialises sound in pygame
 fps = FRAMERATE  # Framerate, controls physics
 fpsClock = pygame.time.Clock()  # Sets up the pygame clock
 start_ticks = pygame.time.get_ticks()
@@ -39,17 +28,14 @@ font = pygame.font.SysFont('Verdana', 18)  # Sets up the Font
 center = height/2
 randColour = list(np.random.choice(range(256), size=3))  # Returns a random colour
 colourDict = {'white': (255, 255, 255), 'brown': (160, 82, 45), 'black': (0, 0, 0)}  # Predefined dictionary of colours
-#bg = pygame.image.load('Images/background1.png')  # Loads in the background image
 heart = pygame.image.load('Images/Heart.png')
 alien = pygame.image.load('Images/alien.png')
-#pygame.Surface.convert(bg)  # Don't have to do this. but meant to
 asteroidRate = ASTEROIDRATE  # bigger = slower
 gravity = False
 # Constants
 Mass = 4*10**13  # Mass of Centre   5.972*10**24
 G = 6.67*10**-11  # Gravity Constant    6.67*10**-11
 # Other Setup
-#pygame.Surface.convert(bg)
 heart = pygame.transform.scale(heart, (12, 12))
 # --All the functions --
 
@@ -81,7 +67,7 @@ class Button:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     pygame.draw.rect(screen, colourDict['white'], (self.xPos, self.yPos, self.width, self.height), 5)
                     menu(self)
-        # Also got check if mouse is clicked and only LMB
+
 
 buttonList = []
 missileButton = Button("Buy Missile", width / 2, (height / 5), 250, 50)
@@ -90,33 +76,19 @@ shieldButton = Button("Buy Shields", width / 2, (height / 5) + 100, 250, 50)
 shotSpeedButton = Button("Buy Faster Shot Speed", width / 2, (height / 5) + 150, 250, 50)
 exitButton = Button("Exit", width / 2, (height / 5) + 200, 250, 50)
 
+
 def start():
     if __name__ == '__main__':
         root.destroy()
         main()
-        # Missile(0, 0, player)
-        try:
-            main()
-        except Exception as e:
-            print(e)
-        #profile.run('main()')    #or main()
-
-
-def time_taken():  # Function that calculates framerate of the application and wrights it to text file
-    endTime = time.time()
-    file = open("times.txt","a")
-    time_taken = float(endTime-startTime)
-    info = "This script took "+str(time_taken)+" seconds"+" and had an average framerate of "+str(frames/time_taken)
-    file.write(info+"\n")
-    file.close()
-
+        # try:
+        #     main()
+        # except Exception as e:
+        #     print(e)
+        #
 
 def distance(v1, v2):  # Vectors 1 and 2
     return math.sqrt((v1[0]-v2[0])**2 + (v1[1]-v2[1])**2)
-
-
-def volume(sound):
-    return sound.set_volume(0.1)
 
 
 class Player:
@@ -143,20 +115,15 @@ class Player:
         self.vector = pygame.math.Vector2()
         self.vel, self.acc, self.thrustPos = self.vector, self.vector, self.vector
         self.front, self.left, self.right = self.vector, self.vector, self.vector
-        # self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
 
     def update(self):  # Is called every tick
         player.cost = int(4 + math.e**(timeCount*0.01))
         list(map(int, self.pos))
         if self.shield >= 1:
             pygame.draw.circle(screen, colourDict['white'], (int(self.pos.x), int(self.pos.y)), self.radius+5, 2)
-
         self.updatePoly()
         self.posistionUpdate()
-        #self.velVector = [math.atan2(self.xVel, self.yVel), math.sqrt(self.xVel**2+self.yVel**2)]  # Theta ,absolute
         self.force = 0  # Resets force when button is not pushed down
-        # self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
-        # Above line and same for init  not needed at the moment but may be needed for other collisions
 
     def sound(self):
         pass
@@ -170,7 +137,6 @@ class Player:
             self.y.append(self.pos.y + self.radius * math.sin(t + -self.angle))   # Where the magic happens
         self.triangle = [(self.x[0], self.y[0]), (self.x[1], self.y[1]), (self.x[2], self.y[2])]  # X, Y Pos List
         self.triangle = pygame.draw.polygon(screen, colourDict['white'], self.triangle, 2)  # Draws the ship
-        # self.triThrust = [(self.x[1], self.y[1]), (self.x[2], self.y[2]), (500, 500)]   cool effect
         if self.force != 0:  # Thrust Animation
             self.thrustPos = pygame.math.Vector2(int(self.pos.x-15 * math.sin(self.angle)), int(self.pos.y-15 * math.cos(self.angle)))
             self.front = pygame.math.Vector2(0, -self.radius/2)
@@ -183,18 +149,21 @@ class Player:
     def posistionUpdate(self):
         self.angle = list(pygame.mouse.get_pos())  # Calculating angle in rads of mouse from the player
         self.angle = [self.angle[0]-self.pos.x, self.angle[1]-self.pos.y]
-        #self.angle = [self.angle[0] - self.pos.x, self.angle[1] - self.pos.y]
         self.angle = (math.atan2(self.angle[0], self.angle[1]))
         if gravity:
             pygame.draw.circle(screen, colourDict['white'], (int(self.grav.x), int(self.grav.y)), 5)
             self.distance = abs(math.sqrt(((self.pos.x - self.grav.x) ** 2) + ((self.pos.y - self.grav.y) ** 2)))
             self.gForce = 50 / self.distance ** 1.05  # V = GM/r
+        else:
+            self.gForce = 0
         if self.distance < 200:
             self.gForce = 0.3
         if gravity:
-            #self.gravAcc = pygame.math.Vector2(self.gForce * (self.grav.x - self.pos.x) / self.distance)
             self.xA = self.gForce * (self.grav.x - self.pos.x) / self.distance
             self.yA = self.gForce * (self.grav.y - self.pos.y) / self.distance
+        else:
+            self.xA = 0
+            self.yA = 0
         self.acc = (math.sin(self.angle) * self.force + self.xA, math.cos(self.angle) * self.force + self.yA)
         self.vel *= self.decay
         self.vel += self.acc
@@ -206,7 +175,6 @@ class Player:
         else:
             player.lives -= 1
             if player.lives == 0:
-                print("You died!")
                 self.deathTime = timeCount
                 player.died = True
                 self.reset()
@@ -214,7 +182,6 @@ class Player:
     def reset(self):
         self.shotSpeed = 0
         self.cash = 0
-        #sys.exit()
 
 
 class Asteroids:
@@ -256,13 +223,8 @@ class Asteroids:
         if self in player.asteroidList:
             player.asteroidList.remove(self)
 
-    def explodeSound(self):
-        thrustSound = pygame.mixer.Sound('Sounds/bangMedium.wav')
-        thrustSound.play()
-        volume(thrustSound)
 
     def hit(self):
-        self.explodeSound()
         if self.mass >= 7500:
             player.score += 100
             player.cash += 1
@@ -308,7 +270,6 @@ class Asteroids:
 
     def update(self):
         self.pos = [self.xPos, self.yPos]
-        #self.velVector = [math.atan2(self.xVel, self.yVel), math.sqrt(self.xVel ** 2 + self.yVel ** 2)]
         self.drawPoly()
         self.posistionUpdate()
         self.boundCheck()
@@ -324,13 +285,10 @@ class Asteroids:
             self.y = self.yPos + self.radius * math.sin(pt+self.angle)
             self.xy = [self.x, self.y]  # Adds these coordinates to list
             self.poly.append(self.xy)  # Adds all coordinates to master list
-        #self.asteroid = pygame.draw.circle(screen, colourDict['white'], (int(self.xPos), int(self.yPos)), self.radius, 2)
         self.asteroid = pygame.draw.polygon(screen, colourDict['white'], self.poly, 2)  # Draws the ship
 
     def collisions(self):
-        #self.radiiSum = player.radius + self.radius
         self.distance = math.sqrt(abs((self.xPos - player.pos.x)**2+(self.yPos-player.pos.y)**2))
-        #print(self.radiiSum, self.distance)
         if self.distance + 2 < player.radius + self.radius:  # the plus 2 gives a bit or breathing room
             self.death()
             player.hit()
@@ -349,7 +307,7 @@ class Asteroids:
             self.death()
 
 
-class Alien:  # Dunno what calls this but it works
+class Alien:
     def __init__(self):
         self.w = 0.04  # Rotational Velocity
         self.radius = 40
@@ -366,25 +324,20 @@ class Alien:  # Dunno what calls this but it works
             if self.pos.y == -50:
                 self.vel.y = random.uniform(0.5, 2)
                 self.vel.x = random.uniform(-1, 1)
-                print('TOP')
             else:
                 self.vel.y = random.uniform(-2, -0.5)
                 self.vel.x = random.uniform(-1, 1)
-                print('BOTTOM')
         else:
             self.pos.x = random.choice([-50, width + 50])
             self.pos.y = random.randint(-50, height + 50)
             if self.pos.x == -50:
-                print('LEFT')
                 self.vel.y = random.uniform(-1, 1)
                 self.vel.x = random.uniform(0.5, 2)
             else:
-                print('RIGHT')
                 self.vel.y = random.uniform(-1, 1)
                 self.vel.x = random.uniform(-0.5, -2)
 
     def update(self):
-        print(len(player.shotList))
         global alien, gravity
         alien = pygame.transform.scale(alien, (50, 30))
         self.count += 1
@@ -393,7 +346,6 @@ class Alien:  # Dunno what calls this but it works
         self.star(0)
         self.star(2*math.pi/3)
         self.star(4*math.pi/3)
-        self.collisions()
         self.shotChance = random.randint(0, 100)
         if self.shotChance <= 2:
             self.shoot()
@@ -401,13 +353,6 @@ class Alien:  # Dunno what calls this but it works
     def shoot(self):
         self.angle = random.uniform(-2*math.pi, 2*math.pi)
         AlienShot(self.angle, self.pos.x+25, self.pos.y+15)
-
-    def collisions(self):
-        for shot in player.shotList:
-            if distance(shot.pos, self.pos) < shot.radius + self.radius*0.7:
-                pass
-                #player.alienList.remove(self)
-                #player.shotList.remove(shot)
 
     def update_pos(self):
         self.alien = pygame.transform.scale(self.alien, (50, 30))
@@ -449,8 +394,6 @@ class Missile:
         player.missiles -= 1
 
 
-            # self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
-
     def update(self):  # Is called every tick
         list(map(int, self.pos))
         self.updatePoly()
@@ -481,13 +424,11 @@ class Missile:
             self.y.append(self.pos.y + self.radius * math.sin(t + -self.angle))   # Where the magic happens
         self.triangle = [(self.x[0], self.y[0]), (self.x[1], self.y[1]), (self.x[2], self.y[2])]  # X, Y Pos List
         self.triangle = pygame.draw.polygon(screen, colourDict['white'], self.triangle, 2)  # Draws the ship
-        # self.triThrust = [(self.x[1], self.y[1]), (self.x[2], self.y[2]), (500, 500)]   cool effect
 
     def posistionUpdate(self):
         self.angle = (math.atan2(self.target[0] - self.pos.x, self.target[1] - self.pos.y))
         self.vel = pygame.math.Vector2(math.sin(self.angle), math.cos(self.angle))
         self.pos += self.vel * self.speed
-        #pygame.draw.circle(screen, colourDict['white'], (int(500), int(500)), self.radius)
 
     def destroy(self):
         player.missileList.remove(self)
@@ -496,13 +437,12 @@ class Missile:
     def reset(self):
         self.shotSpeed = 0
         self.cash = 0
-        #sys.exit()
+
 
 
 class Shot:
     def __init__(self, angle, xPos, yPos):
         player.shotList.append(self)
-        self.sound()
         self.angle, self.xPos, self.yPos = angle, xPos, yPos
         self.xVel = math.sin(self.angle) * player.shotSpeed
         self.yVel = math.cos(self.angle) * player.shotSpeed
@@ -511,10 +451,6 @@ class Shot:
         self.pos = [xPos, yPos]
         self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
 
-    def sound(self):
-        fireSound = pygame.mixer.Sound('Sounds/fire.wav')
-        fireSound.play()
-        volume(fireSound)
 
     def update(self):
         self.pos = [self.xPos, self.yPos]
@@ -530,42 +466,22 @@ class Shot:
         player.shotList.remove(self)
 
 
-class AlienShot:
+class AlienShot(Shot):
     def __init__(self, angle, xPos, yPos):
+        super().__init__(angle, xPos, yPos)
         player.alienShotList.append(self)
-        self.playerHit = True
-        self.sound()
-        self.angle, self.xPos, self.yPos = angle, xPos, yPos
-        self.xVel = math.sin(self.angle) * 5
-        self.yVel = math.cos(self.angle) * 5
-        self.distance = 0
-        self.radius = 4
-        self.pos = [xPos, yPos]
-        self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
 
-    def sound(self):
-        fireSound = pygame.mixer.Sound('Sounds/fire.wav')
-        fireSound.play()
-        volume(fireSound)
+    def updateShot(self):
+        if distance([self.xPos, self.yPos],[player.pos.x, player.pos.y]) < player.radius+self.radius:
+            try:
+                player.shotList.remove(self)
+                player.alienShotList.remove(self)
+                player.hit()
+            except:
+                pass
 
-    def update(self):
-        self.pos = [self.xPos, self.yPos]
-        self.xPos += self.xVel
-        self.yPos += self.yVel
-        self.shot = pygame.draw.circle(screen, colourDict['white'], (int(self.xPos), int(self.yPos)), self.radius)
-        self.distance = abs(math.sqrt(((self.xPos - center) ** 2) + ((self.yPos - center) ** 2)))
-        self.rect = pygame.Rect(self.xPos, self.yPos, self.radius, self.radius)
-        if self.distance > 1000:
-            self.death()
-
-    def death(self):
-        player.shotList.remove(self)
 
 def keyboard(pressed):
-    if pressed[pygame.K_g]:
-        global gravity
-        gravity = True
-
     if pressed[pygame.K_SPACE]:
         player.force = 0.4
 
@@ -597,7 +513,7 @@ def hud():
         print(e)
 
 
-def updater():  # print(len(player.planetList))
+def updater():
     if exitButton.pressed:
         for button in buttonList:
             button.update()
@@ -611,6 +527,8 @@ def updater():  # print(len(player.planetList))
         alien.update()
     player.update()
     try:
+        for shot in player.alienShotList:
+            shot.updateShot()
         for shot in player.shotList:
             shot.update()
     finally:
@@ -620,7 +538,6 @@ def updater():  # print(len(player.planetList))
 def event_handler():
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            time_taken()
             sys.exit()
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse = pygame.mouse.get_pressed()
@@ -654,21 +571,23 @@ def rand_spawns():
     global numberOfAsteroids
     global asteroidRate
     global gravity
+    global counted
+    startTime = 0
     if timeCount % 5 == 0:
-        if random.randint(0, player.cost) > 0:
+        if random.randint(0, player.cost) > 4:
             Alien()
     if timeCount % asteroidRate == 0:
         numberOfAsteroids += 1
     for i in range(0, numberOfAsteroids):  # Rotation , xPos, yPos
         Asteroids(0, 0, 0, 0, 0, 0)
-    # if timeCount % 30 == 0:
-    #     if timeCount % 9 == 0:
-    #         gravity = False
-    #     else:
-    #         gravity = True
-    #         player.grav = pygame.math.Vector2(random.randint(0, width), random.randint(0, height))
-    #         if timeCount % 9 == 0:
-    #             gravity = False
+    if timeCount % 30 == 0:
+        gravity = True
+        player.grav = pygame.math.Vector2(random.randint(100, width-100), random.randint(100, height-100))
+    if gravity:
+        counted += 1
+    if counted > 10:
+        gravity = False
+
 
 
 def menu(button):
@@ -696,8 +615,8 @@ def menu(button):
 
 def main():  # A bit messy try clean up  ["Easy", "Normal", "Hard", "Extreme"]
     global totFrames, timeCount, frameRate, textList, numberOfAsteroids, player
-    global frames, actualFps, startTime, gravity, asteroidRate
-    frames, actualFps, count, degrees, score, timeCount, totFrames, frames, cash = 0, 0, 0, 0, 0, 0, 0, 0, 0
+    global frames, actualFps, startTime, gravity, asteroidRate, counted
+    frames, actualFps, count, degrees, score, timeCount, totFrames, frames, cash, counted = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     textList = {}
     text, frameRate = '', ''
     numberOfAsteroids = ASTEROIDSPAWN
@@ -713,7 +632,6 @@ def main():  # A bit messy try clean up  ["Easy", "Normal", "Hard", "Extreme"]
     player = Player()
     player.planetList, satList, player.missileList, player.shotList, player.asteroidList = [], [], [], [], []
     rand_spawns()
-    #rand_planets()    Cool Effect
     gravity = False
     while True:  # main game loop
         screen.fill(colourDict['black'])
@@ -746,11 +664,27 @@ default = tkinter.StringVar()
 default.set("Normal")
 
 menu = tkinter.OptionMenu(root, default, *optionList).pack()
-text = tkinter.Text(root, height=17, width=60)
+text = tkinter.Text(root, height=20, width=60)
 text.pack()
-text.insert(tkinter.END, "Orbit\nA Game similar to the arcade game Asteroids\n\nAim: Get the highest score possible by shooting"
-                 " asteroids;\n At random points during the game Aleinds and Gravity Wells may appear\n Be careful!\n\nControls:\nSpace = Forward\nMouse = Direction of ship\nM = Fire Missile\nB = Buy Menu\n1 = Buy Missiles"
-                 "\n2 = Buy Lives\n3 = Buy Shields\n4 = Buy Faster Shot")
+text.insert(tkinter.END, "Orbit\n"
+                         "A Game similar to the arcade game Asteroids\n"
+                         "\n"
+                         "Aim: Get the highest score possible by shooting"
+                         " asteroids;\n"
+                         "At random points during the game Aliens and Gravity Wells may appear\n"
+                         "Missiles have an arming time of 0.5 seconds\n"
+                         "Aliens are very powerful and cannot be destroyed\n"
+                         "Be careful!\n"
+                         "\n"
+                         "Controls:\n"
+                         "Space = Forward\n"
+                         "Mouse = Direction of ship\n"
+                         "M = Fire Missile\n"
+                         "B = Buy Menu\n"
+                         "1 = Buy Missiles\n"
+                         "2 = Buy Lives\n"
+                         "3 = Buy Shields\n"
+                         "4 = Buy Faster Shot")
 startButton = tkinter.Button(root, text="Start", command=start)
 startButton.pack()
 
